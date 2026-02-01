@@ -1,0 +1,11 @@
+{
+    "svr_linear_best_params": {
+        "C": 10,
+        "epsilon": 0.01
+    },
+    "svr_rbf_best_params": {
+        "C": 100,
+        "epsilon": 0.01,
+        "gamma": 0.1
+    }
+}
