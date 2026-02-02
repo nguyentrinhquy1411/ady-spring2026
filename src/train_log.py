@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Training script using the 4 original models with optimized hyperparameters.
+Training script with log-transformed target and advanced feature engineering.
 Goal: Achieve R² > 70%
 """
 
@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 
 from load_data import load_raw_data
 from preprocess import split_data_time_based, preprocess_data
-from models import MeanBaseline, OLSBaseline, RidgeBaseline, LassoBaseline, SVRWrapper
+from models import MeanBaseline, OLSBaseline, RidgeBaseline, LassoBaseline
 from evaluate import calculate_metrics, print_metrics
 import pandas as pd
 import numpy as np
@@ -25,32 +25,40 @@ def train_and_evaluate(model, X_train, y_train, X_test, y_test, model_name):
 
 def main():
     print("="*60)
-    print("  Chicago Real Estate Price Prediction")
-    print("  Using 5 Models (Mean, OLS, Ridge, Lasso, SVR)")
+    print("  Chicago Real Estate - Log-Transformed Target")
     print("  Goal: Achieve R² > 70%")
     print("="*60)
     
     # Load and prepare data
-    print("\n[1/4] Loading data...")
+    print("\n[1/5] Loading data...")
     df = load_raw_data()
     
     # Split data
-    print("\n[2/4] Splitting data (time-based)...")
+    print("\n[2/5] Splitting data (time-based)...")
     train_df, test_df = split_data_time_based(df, 'soldOn', train_ratio=0.7)
     
-    # Preprocess
-    print("\n[3/4] Preprocessing...")
-    train_df, test_df, scaler = preprocess_data(train_df, test_df, target_col='lastSoldPrice')
+    # Log transform the target variable
+    print("\n[3/5] Applying log transformation to target...")
+    train_df['log_price'] = np.log1p(train_df['lastSoldPrice'])
+    test_df['log_price'] = np.log1p(test_df['lastSoldPrice'])
+    
+    # Preprocess with polynomial features
+    print("\n[4/5] Preprocessing with polynomial features...")
+    train_df, test_df, scaler = preprocess_data(train_df, test_df, target_col='log_price', use_poly_features=True)
     
     # Prepare features and target
-    meta_cols = ['soldOn', 'type', 'text']
-    target_col = 'lastSoldPrice'
+    meta_cols = ['soldOn', 'type', 'text', 'lastSoldPrice']  # Keep original price in meta
+    target_col = 'log_price'
     feature_cols = [c for c in train_df.columns if c != target_col and c not in meta_cols]
     
     X_train = train_df[feature_cols]
-    y_train = train_df[target_col]
+    y_train_log = train_df[target_col]
     X_test = test_df[feature_cols]
-    y_test = test_df[target_col]
+    y_test_log = test_df[target_col]
+    
+    # Keep original prices for final evaluation
+    y_train_orig = train_df['lastSoldPrice']
+    y_test_orig = test_df['lastSoldPrice']
     
     print(f"\nDataset summary:")
     print(f"  Training samples: {len(X_train)}")
@@ -58,7 +66,7 @@ def main():
     print(f"  Features: {len(feature_cols)}")
     
     # Train and evaluate models
-    print("\n[4/4] Training models...")
+    print("\n[5/5] Training models on log-transformed target...")
     print("\n" + "="*60)
     
     results = []
@@ -66,42 +74,46 @@ def main():
     # 1. Mean Baseline
     print("\n1. Mean Baseline (sanity check)")
     model = MeanBaseline()
-    metrics = train_and_evaluate(model, X_train, y_train, X_test, y_test, "Mean Baseline")
+    model.fit(X_train, y_train_log)
+    y_pred_log = model.predict(X_test)
+    y_pred = np.expm1(y_pred_log)  # Transform back to original scale
+    metrics = calculate_metrics(y_test_orig, y_pred, "Mean Baseline")
+    print_metrics(metrics)
     results.append(metrics)
     
     # 2. OLS Linear Regression
     print("\n2. Ordinary Least Squares")
     model = OLSBaseline()
-    metrics = train_and_evaluate(model, X_train, y_train, X_test, y_test, "OLS Linear Regression")
+    model.fit(X_train, y_train_log)
+    y_pred_log = model.predict(X_test)
+    y_pred = np.expm1(y_pred_log)
+    metrics = calculate_metrics(y_test_orig, y_pred, "OLS Linear Regression")
+    print_metrics(metrics)
     results.append(metrics)
     
-    # 3. Ridge Regression with extended alpha range
+    # 3. Ridge Regression
     print("\n3. Ridge Regression (optimized)")
     alphas = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]
     model = RidgeBaseline(alphas=alphas)
-    metrics = train_and_evaluate(model, X_train, y_train, X_test, y_test, "Ridge Regression")
+    model.fit(X_train, y_train_log)
+    y_pred_log = model.predict(X_test)
+    y_pred = np.expm1(y_pred_log)
+    metrics = calculate_metrics(y_test_orig, y_pred, "Ridge Regression")
+    print_metrics(metrics)
     results.append(metrics)
     print(f"  Best alpha: {model.alpha_}")
     
-    # 4. Lasso Regression with extended alpha range
+    # 4. Lasso Regression
     print("\n4. Lasso Regression (optimized)")
-    alphas = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
+    alphas = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
     model = LassoBaseline(alphas=alphas)
-    metrics = train_and_evaluate(model, X_train, y_train, X_test, y_test, "Lasso Regression")
+    model.fit(X_train, y_train_log)
+    y_pred_log = model.predict(X_test)
+    y_pred = np.expm1(y_pred_log)
+    metrics = calculate_metrics(y_test_orig, y_pred, "Lasso Regression")
+    print_metrics(metrics)
     results.append(metrics)
     print(f"  Best alpha: {model.alpha_}")
-    
-    # 5. SVR (Support Vector Regression) with Linear kernel
-    print("\n5. SVR (Linear kernel)")
-    print("  Training with optimized hyperparameters...")
-    param_grid = {
-        'C': [0.1, 1, 10, 100],
-        'epsilon': [0.01, 0.1, 1]
-    }
-    model = SVRWrapper(kernel='linear', param_grid=param_grid, cv=3)
-    metrics = train_and_evaluate(model, X_train, y_train, X_test, y_test, "SVR (Linear)")
-    results.append(metrics)
-    print(f"  Best params: {model.best_params_}")
     
     # Summary
     print("\n" + "="*60)

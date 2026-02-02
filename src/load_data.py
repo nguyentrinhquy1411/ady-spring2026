@@ -1,53 +1,73 @@
 import pandas as pd
+import numpy as np
 import os
+from datetime import datetime
 
-def load_raw_data(filepath: str = 'data/raw/hpi_master_research_features.csv') -> pd.DataFrame:
+def load_raw_data(filepath: str = 'data/raw/real_estate_data_chicago.csv') -> pd.DataFrame:
     """
-    Load data from HPI CSV and prepare features/target.
+    Load Chicago real estate data and prepare features/target.
     
-    Target: hpi_metro_nsa (using Non-Seasonally Adjusted as default target)
-    Features (X): hpi_lag_1..8, qoq_growth, yoy_growth, etc.
-    Meta: year, quarter, metro_name
+    Target: lastSoldPrice (actual sold price)
+    Features: year_built, beds, baths, sqft, lot_sqft, garage, stories, property type
+    Time column: soldOn (date of sale)
     """
-    if not os.path.join(os.getcwd(), filepath) and not os.path.exists(filepath):
-         # Try absolute path check or relative
-         pass
-
     # Support running from different directories
     if not os.path.exists(filepath):
-         if os.path.exists(f"../{filepath}"):
-             filepath = f"../{filepath}"
+        if os.path.exists(f"../{filepath}"):
+            filepath = f"../{filepath}"
     
     try:
         df = pd.read_csv(filepath)
     except FileNotFoundError:
         raise FileNotFoundError(f"File not found at {filepath}")
 
-    # Basic cleaning
-    # Create a sortable time index
-    df['period_id'] = df['year'] + df['quarter'] / 4.0
+    # Filter to only properties with sale data (soldOn and lastSoldPrice)
+    df = df[df['soldOn'].notna() & df['lastSoldPrice'].notna()].copy()
     
-    # Select candidate features
-    # Based on file preview: hpi_lag_*, growth metrics
-    feature_cols = [
-        'hpi_lag_1', 'hpi_lag_2', 'hpi_lag_4', 
-        'qoq_growth', 'yoy_growth', 'volatility_4q',
-        'metro_to_state_ratio'
+    # Parse soldOn as datetime
+    df['soldOn'] = pd.to_datetime(df['soldOn'])
+    
+    # Extract time features
+    df['sale_year'] = df['soldOn'].dt.year
+    df['sale_month'] = df['soldOn'].dt.month
+    df['sale_quarter'] = df['soldOn'].dt.quarter
+    
+    # Feature engineering: property age at time of sale
+    df['property_age'] = df['sale_year'] - df['year_built']
+    # Handle cases where year_built is missing or invalid
+    df.loc[df['property_age'] < 0, 'property_age'] = np.nan
+    df.loc[df['property_age'] > 150, 'property_age'] = np.nan  # More reasonable threshold
+    
+    # Feature engineering: price per sqft (will be calculated after we have the data)
+    # We'll add this as a derived feature but not use it as input to avoid leakage
+    
+    # One-hot encode property type
+    type_dummies = pd.get_dummies(df['type'], prefix='type', drop_first=True)
+    df = pd.concat([df, type_dummies], axis=1)
+    
+    # Define feature columns
+    base_feature_cols = [
+        'year_built', 'beds', 'baths', 'baths_full', 'baths_half',
+        'garage', 'lot_sqft', 'sqft', 'stories', 'property_age',
+        'sale_year', 'sale_month', 'sale_quarter'
     ]
-    target_col = 'hpi_metro_nsa'
-    meta_cols = ['year', 'quarter', 'metro_name', 'period_id']
     
-    # Allow passing through but ensure we have what we need
-    # Filter only rows where target is not null
-    df = df.dropna(subset=[target_col])
+    # Add property type dummy columns
+    type_cols = [col for col in df.columns if col.startswith('type_')]
+    feature_cols = base_feature_cols + type_cols
     
-    # We might want to fill NaNs in features or drop them. 
-    # For simplicity in this 'load' step, we pass them through, 
-    # but let's at least select relevant columns to avoid noise.
+    # Target column
+    target_col = 'lastSoldPrice'
     
-    cols_to_keep = meta_cols + feature_cols + [target_col]
+    # Metadata columns
+    meta_cols = ['soldOn', 'type', 'text']
     
-    # Check if columns exist
+    # Select only available columns
+    available_features = [c for c in feature_cols if c in df.columns]
+    cols_to_keep = meta_cols + available_features + [target_col]
     available_cols = [c for c in cols_to_keep if c in df.columns]
+    
+    # Sort by soldOn for time-based splitting
+    df = df.sort_values('soldOn').reset_index(drop=True)
     
     return df[available_cols]
