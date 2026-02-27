@@ -22,15 +22,13 @@
 
 % Section Formatting & Page Breaks
 \usepackage{titlesec}
-% 1. Each \section must start on a new page.
-\newcommand{\sectionbreak}{\clearpage}
+\usepackage[dvipsnames]{xcolor} % Make sure this is loaded before using colors in titles
+\definecolor{PrimaryCol}{HTML}{1A4568} % A professional deep Navy/Slate blue
+
 % 2. \subsection should NOT start on a new page, but spacing before and after adjusted.
 \titlespacing*{\subsection}{0pt}{1.5ex plus 0.5ex minus .2ex}{1ex plus .2ex}
-
-% Table of Contents
-\usepackage{tocloft}
-% Add space to the TOC
-\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\titleformat{\section}{\large\bfseries\color{PrimaryCol}}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{PrimaryCol}}{\thesubsection}{1em}{}
 
 % Figures & Tables
 \usepackage{graphicx}
@@ -53,20 +51,21 @@
 
 % ====== STYLE ENHANCEMENTS ======
 \usepackage{microtype} % Subliminal typography and justification improvements
-\usepackage[dvipsnames]{xcolor} % Professional colors
+% xcolor loaded earlier for section formatting
 \usepackage[colorlinks=true, linkcolor=NavyBlue, citecolor=NavyBlue, urlcolor=NavyBlue]{hyperref} % Clickable, colored links
 \usepackage{authblk} % Professional multi-author formatting
+\usepackage{multicol} % For mixing 1 and 2 column layouts
 
 % Better table row spacing
 \renewcommand{\arraystretch}{1.2}
 
 \begin{document}
 
-\title{\textbf{Comparative Analysis of Spatial Pooling Strategies in Housing Return Forecasting}}
-\author[1]{Nguyễn Trinh Quý}
-\author[1]{Nguyễn Công Minh}
-\author[1]{Lê Phạm Huệ Chi}
-\author[1]{Nguyễn Đỗ Nhật Quang}
+\title{\textcolor{PrimaryCol}{\textbf{Comparative Analysis of Spatial Pooling Strategies in Housing Return Forecasting}}}
+\author[1]{Nguyen Trinh Quy}
+\author[1]{Nguyen Cong Minh}
+\author[1]{Le Pham Hue Chi}
+\author[1]{Nguyen Do Nhat Quang}
 \affil[1]{\textit{FPT University}}
 \date{}
 
@@ -77,10 +76,7 @@
 \noindent While dynamic panel models are standard in real estate forecasting, the optimal degree of spatial information sharing---the pooling strategy---remains heavily debated due to the severe bias-variance trade-off inherent in housing data. This study systematically evaluates five pooling paradigms (Complete Pooling, Complete Fragmentation, Fixed Effects, Ridge Regularisation, and Mixed Effects) to forecast monthly housing returns across 894 US Metropolitan Statistical Areas (MSAs) from 2001 to 2020. Using a stringent 5-fold expanding window evaluation, we quantify the catastrophic failure of unpooled local models (RMSE inflation $>5000\%$) caused by the ``short-T'' problem. We demonstrate that a Hierarchical Mixed Effects architecture, employing James-Stein shrinkage for adaptive partial pooling, achieves the highest out-of-sample predictive accuracy (RMSE = 0.00233). Furthermore, Diebold-Mariano tests confirm that this partial pooling strategy statistically significantly outperforms both completely unpooled formulations and traditional Fixed Effects estimators. The findings provide practitioners with a scalable, regularised architecture for regional economic forecasting and provide empirical evidence of profound macro-level integration across US regional housing markets.
 \end{abstract}
 
-% Table of contents formatted correctly and placed on its own page
-\clearpage
-\tableofcontents
-
+\begin{multicols}{2}
 \section{Introduction}
 
 Forecasting regional real estate returns is a quintessential application of dynamic panel data modelling. Housing markets are characterized by a complex combination of shared national macroeconomic momentum---driven by federal interest rates and systemic credit cycles---and distinct spatial heterogeneity resulting from localized supply inelasticities and demographic shifts. Consequently, econometricians and market practitioners must navigate a fundamental modelling challenge: determining the appropriate level of information sharing, or \textit{pooling}, across cross-sectional units. 
@@ -96,6 +92,7 @@ The econometric analysis of panel data has long grappled with the tension betwee
 
 However, forecasting objectives differ from causal inference. In forecasting, minimizing out-of-sample MSFE often requires accepting some estimator bias to drastically reduce variance. Pesaran and Smith \cite{pesaran1995estimating} showed that averaging independently estimated local models (the Mean Group estimator) can be preferable to pooling when slope coefficients are heterogeneous. More recently, multi-level/hierarchical models \cite{gelman2006data} have emerged as a powerful paradigm for \textit{partial pooling}. By treating varying coefficients as samples from a shared population distribution, algorithms can apply data-driven structural shrinkage, improving generalization without sacrificing local adaptability. This study formalizes this comparison practically using modern validation protocols.
 
+\end{multicols}
 
 \section{Methodology}
 
@@ -211,7 +208,9 @@ The Mixed Effects model achieved the lowest out-of-sample RMSE ($0.002335$) acro
 
 Furthermore, Diebold-Mariano tests performed on a hold-out dataset (2020) confirmed that unpooled models produce statistically significant higher prediction losses relative to the global benchmark ($p < 0.001$). The Mixed Effects framework safely captures any signal that survives the shrinkage process without exposing the forecast to the severe variance drag experienced by the Fixed Effects model.
 
+\vspace{0.5cm}
 
+\begin{multicols}{2}
 \section{Conclusion}
 
 In the dynamic panel forecasting of regional real estate returns, our empirical results dictate that the cost of variance vastly outweighs the cost of bias. Models that fragment the panel to independently estimate local parameters demonstrate catastrophic predictive failure, proving that spatial sample sizes ($T \approx 240$ months) are severely insufficient to reliably fit complex autoregressive lag structures. 
@@ -221,9 +220,9 @@ Conversely, architectures that enforce structural pooling excel. The high and ro
 Future research should investigate whether these pooling dynamics hold across diverse international housing markets, and whether the optimal shrinkage penalty shifts dynamically during periods of extreme macroeconomic crisis.
 
 
-% References must appear on a new page.
-\clearpage
+% References
 \bibliographystyle{plain}
 \bibliography{references}
+\end{multicols}
 
 \end{document}
