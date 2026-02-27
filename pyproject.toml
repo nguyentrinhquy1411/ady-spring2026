@@ -12,4 +12,8 @@ dependencies = [
     "seaborn>=0.13.0",
     "plotly>=5.18.0",
     "statsmodels>=0.14.6",
+    "scikit-learn>=1.8.0",
+    "scipy>=1.17.0",
+    "linearmodels>=7.0",
+    "tqdm>=4.67.3",
 ]

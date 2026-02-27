@@ -1,0 +1,137 @@
+{
+  "holdout": {
+    "Pooled OLS": {
+      "rmse": 0.0027562013863552384,
+      "mae": 0.002009448547226802
+    },
+    "Local OLS": {
+      "rmse": 0.0028523922427951026,
+      "mae": 0.0020734467958612676
+    },
+    "Fixed Effects (LSDV)": {
+      "rmse": 0.00275676167962335,
+      "mae": 0.002009768404882073
+    },
+    "Global Ridge": {
+      "rmse": 0.002756578759579497,
+      "mae": 0.0020097343013380964
+    },
+    "Local Ridge": {
+      "rmse": 0.0032528337407566124,
+      "mae": 0.0023956030657858573
+    },
+    "Mixed Effects (Partial Pooling)": {
+      "rmse": 0.0027569296244479248,
+      "mae": 0.0020086673063658455
+    }
+  },
+  "dm_tests": {
+    "Local OLS": {
+      "dm_stat": -9.0384,
+      "p_value": 0.0,
+      "significant": true,
+      "better_model": "model_1",
+      "mean_loss_e1": 8e-06,
+      "mean_loss_e2": 8e-06,
+      "delta_loss": -1e-06
+    },
+    "Fixed Effects (LSDV)": {
+      "dm_stat": -0.3089,
+      "p_value": 0.7574,
+      "significant": false,
+      "better_model": "model_1",
+      "mean_loss_e1": 8e-06,
+      "mean_loss_e2": 8e-06,
+      "delta_loss": -0.0
+    },
+    "Global Ridge": {
+      "dm_stat": -0.208,
+      "p_value": 0.8352,
+      "significant": false,
+      "better_model": "model_1",
+      "mean_loss_e1": 8e-06,
+      "mean_loss_e2": 8e-06,
+      "delta_loss": -0.0
+    },
+    "Local Ridge": {
+      "dm_stat": -30.7134,
+      "p_value": 0.0,
+      "significant": true,
+      "better_model": "model_1",
+      "mean_loss_e1": 8e-06,
+      "mean_loss_e2": 1.1e-05,
+      "delta_loss": -3e-06
+    },
+    "Mixed Effects (Partial Pooling)": {
+      "dm_stat": -0.4015,
+      "p_value": 0.6881,
+      "significant": false,
+      "better_model": "model_1",
+      "mean_loss_e1": 8e-06,
+      "mean_loss_e2": 8e-06,
+      "delta_loss": -0.0
+    }
+  },
+  "rolling_origin_cv": {
+    "Pooled OLS": {
+      "model": "Pooled OLS",
+      "n_folds": 5,
+      "rmse_mean": 0.0023436334344939295,
+      "rmse_std": 0.00016780940985278606,
+      "mae_mean": 0.0014918344761312458,
+      "mae_std": 0.00022248656967639241,
+      "avg_n_train": 114789,
+      "avg_n_test": 25389
+    },
+    "Local OLS": {
+      "model": "Local OLS",
+      "n_folds": 5,
+      "rmse_mean": 12.890662393089482,
+      "rmse_std": 25.754163407310077,
+      "mae_mean": 0.3213903924718872,
+      "mae_std": 0.6382862354279466,
+      "avg_n_train": 114789,
+      "avg_n_test": 25389
+    },
+    "Fixed Effects (LSDV)": {
+      "model": "Fixed Effects (LSDV)",
+      "n_folds": 5,
+      "rmse_mean": 0.002381541991045614,
+      "rmse_std": 0.00015177988748096908,
+      "mae_mean": 0.001510651319352336,
+      "mae_std": 0.0001991486482646706,
+      "avg_n_train": 114789,
+      "avg_n_test": 25389
+    },
+    "Global Ridge": {
+      "model": "Global Ridge",
+      "n_folds": 5,
+      "rmse_mean": 0.002343633451275559,
+      "rmse_std": 0.00016780940868286727,
+      "mae_mean": 0.0014918344949118546,
+      "mae_std": 0.0002224865559607066,
+      "avg_n_train": 114789,
+      "avg_n_test": 25389
+    },
+    "Local Ridge": {
+      "model": "Local Ridge",
+      "n_folds": 5,
+      "rmse_mean": 0.004975749422712012,
+      "rmse_std": 0.001854322487188279,
+      "mae_mean": 0.0019888149703280096,
+      "mae_std": 0.00025882512982320976,
+      "avg_n_train": 114789,
+      "avg_n_test": 25389
+    },
+    "Mixed Effects (Partial Pooling)": {
+      "model": "Mixed Effects (Partial Pooling)",
+      "n_folds": 5,
+      "rmse_mean": 0.0023352836773816187,
+      "rmse_std": 0.00017759972122794268,
+      "mae_mean": 0.0014853415060137516,
+      "mae_std": 0.00023484468879304547,
+      "avg_n_train": 114789,
+      "avg_n_test": 25389
+    }
+  }
+}

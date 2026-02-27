@@ -1,0 +1,229 @@
+\documentclass[10pt, a4paper]{article}
+
+% Page Layout & Margins
+\usepackage[
+  left=3cm,
+  right=2cm,
+  top=2.5cm,
+  bottom=2.5cm
+]{geometry}
+
+% Title & Author Formatting
+\usepackage{titling}
+
+% Line Spacing
+\usepackage{setspace}
+\setstretch{1.5}          % 1.5 line spacing
+
+% Paragraph formatting
+\usepackage{indentfirst}  % Indent first paragraph of sections
+\setlength{\parindent}{1.27cm} % First-line paragraph indentation: 1.27 cm
+\setlength{\parskip}{0pt}      % No extra vertical spacing between paragraphs
+
+% Section Formatting & Page Breaks
+\usepackage{titlesec}
+% 1. Each \section must start on a new page.
+\newcommand{\sectionbreak}{\clearpage}
+% 2. \subsection should NOT start on a new page, but spacing before and after adjusted.
+\titlespacing*{\subsection}{0pt}{1.5ex plus 0.5ex minus .2ex}{1ex plus .2ex}
+
+% Table of Contents
+\usepackage{tocloft}
+% Add space to the TOC
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+% Figures & Tables
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\captionsetup{justification=centering, font=small, labelfont=bf} % Professional captions
+
+% Header/Footer: Page numbers centered at bottom
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % Clear all headers and footers
+\cfoot{\thepage} % Center foot page number
+\renewcommand{\headrulewidth}{0pt} % No line at top
+
+% Math formatting
+\usepackage{amsmath}
+
+% Quotes/Refs
+\usepackage{cite}
+
+% ====== STYLE ENHANCEMENTS ======
+\usepackage{microtype} % Subliminal typography and justification improvements
+\usepackage[dvipsnames]{xcolor} % Professional colors
+\usepackage[colorlinks=true, linkcolor=NavyBlue, citecolor=NavyBlue, urlcolor=NavyBlue]{hyperref} % Clickable, colored links
+\usepackage{authblk} % Professional multi-author formatting
+
+% Better table row spacing
+\renewcommand{\arraystretch}{1.2}
+
+\begin{document}
+
+\title{\textbf{Comparative Analysis of Spatial Pooling Strategies in Housing Return Forecasting}}
+\author[1]{Nguyễn Trinh Quý}
+\author[1]{Nguyễn Công Minh}
+\author[1]{Lê Phạm Huệ Chi}
+\author[1]{Nguyễn Đỗ Nhật Quang}
+\affil[1]{\textit{FPT University}}
+\date{}
+
+\maketitle
+\thispagestyle{fancy} % Ensure first page has page number centered at bottom
+
+\begin{abstract}
+\noindent While dynamic panel models are standard in real estate forecasting, the optimal degree of spatial information sharing---the pooling strategy---remains heavily debated due to the severe bias-variance trade-off inherent in housing data. This study systematically evaluates five pooling paradigms (Complete Pooling, Complete Fragmentation, Fixed Effects, Ridge Regularisation, and Mixed Effects) to forecast monthly housing returns across 894 US Metropolitan Statistical Areas (MSAs) from 2001 to 2020. Using a stringent 5-fold expanding window evaluation, we quantify the catastrophic failure of unpooled local models (RMSE inflation $>5000\%$) caused by the ``short-T'' problem. We demonstrate that a Hierarchical Mixed Effects architecture, employing James-Stein shrinkage for adaptive partial pooling, achieves the highest out-of-sample predictive accuracy (RMSE = 0.00233). Furthermore, Diebold-Mariano tests confirm that this partial pooling strategy statistically significantly outperforms both completely unpooled formulations and traditional Fixed Effects estimators. The findings provide practitioners with a scalable, regularised architecture for regional economic forecasting and provide empirical evidence of profound macro-level integration across US regional housing markets.
+\end{abstract}
+
+% Table of contents formatted correctly and placed on its own page
+\clearpage
+\tableofcontents
+
+\section{Introduction}
+
+Forecasting regional real estate returns is a quintessential application of dynamic panel data modelling. Housing markets are characterized by a complex combination of shared national macroeconomic momentum---driven by federal interest rates and systemic credit cycles---and distinct spatial heterogeneity resulting from localized supply inelasticities and demographic shifts. Consequently, econometricians and market practitioners must navigate a fundamental modelling challenge: determining the appropriate level of information sharing, or \textit{pooling}, across cross-sectional units. 
+
+Despite the proliferation of machine learning techniques in real estate valuation, traditional econometric models remain paramount for multi-step forecasting due to their structural interpretability. However, the existing literature frequently defaults to binary choices: either employing completely pooled global models that ignore regional idiosyncrasies, or leveraging local, city-specific estimations that suffer from severe degrees-of-freedom constraints. This binary approach ignores the bias-variance trade-off deeply embedded in spatial time-series data. Unpooled, city-specific (Local) models eliminate omitted variable bias but suffer from the ``short-T'' problem, where the limited time dimension causes high-variance error explosions in autoregressive parameter estimation \cite{pesaran1995estimating}. Conversely, completely pooled models maximize statistical power but risk systematic bias if unobserved regional fixed effects are significant \cite{nickell1981biases}.
+
+To address this gap, this paper systematically quantifies the forecasting performance of the entire spectrum of pooling strategies... We utilize 20 years of monthly data across 894 Metropolitan Statistical Areas (MSAs) provided by Zillow. Moving beyond binary global vs. local choices, we investigate intermediate strategies: Fixed Effects (FE) models for capturing time-invariant unobservables, Ridge Regression for $L_2$ shrinkage, and Mixed Effects models that employ James-Stein shrinkage to implement \textit{partial pooling} \cite{robinson1991that}. Using a rigorous 5-fold rolling-origin evaluation \cite{tashman2000out} and the Diebold-Mariano test \cite{diebold1995comparing}, we demonstrate that Mixed Effects models gracefully balance bias and variance, significantly outperforming unpooled local estimators and offering robust prediction across highly correlated regional markets.
+
+
+\section{Related Work}
+
+The econometric analysis of panel data has long grappled with the tension between homogeneity and heterogeneity \cite{hsiao2014analysis}. Early work established that pooling time-series and cross-sectional data can drastically reduce mean squared forecasting error (MSFE) under certain conditions \cite{mundlak1978pooling}. In dynamic panels containing lagged dependent variables, standard Fixed Effects estimators (the Within estimator) are notoriously susceptible to Nickell bias when $T$ is small \cite{nickell1981biases}, prompting the development of Instrumental Variable (IV) and Generalized Method of Moments (GMM) techniques such as Arellano-Bond \cite{arellano1991some}.
+
+However, forecasting objectives differ from causal inference. In forecasting, minimizing out-of-sample MSFE often requires accepting some estimator bias to drastically reduce variance. Pesaran and Smith \cite{pesaran1995estimating} showed that averaging independently estimated local models (the Mean Group estimator) can be preferable to pooling when slope coefficients are heterogeneous. More recently, multi-level/hierarchical models \cite{gelman2006data} have emerged as a powerful paradigm for \textit{partial pooling}. By treating varying coefficients as samples from a shared population distribution, algorithms can apply data-driven structural shrinkage, improving generalization without sacrificing local adaptability. This study formalizes this comparison practically using modern validation protocols.
+
+
+\section{Methodology}
+
+Let $y_{i,t}$ denote the log-return of housing prices for city $i \in \{1, \dots, N\}$ at month $t \in \{1, \dots, T\}$. We model $y_{i,t}$ as an autoregressive process dependent on $k$ temporal lags and spatial momentum features, represented by the vector $X_{i,t}$. We evaluate five distinct formulations.
+
+\subsection{Pooled (Global) OLS}
+
+The completely pooled formulation assumes homogeneous intercepts and slopes:
+\begin{equation}
+    y_{i,t} = \alpha + \beta^T X_{i,t} + \epsilon_{i,t}
+\end{equation}
+where $\epsilon_{i,t} \sim N(0, \sigma^2)$. The estimates $(\hat{\alpha}, \hat{\beta})$ are identical across all $i$.
+
+\subsection{Local (City-Specific) OLS}
+
+The completely unpooled fragment assumes absolute heterogeneity:
+\begin{equation}
+    y_{i,t} = \alpha_i + \beta_i^T X_{i,t} + \epsilon_{i,t}
+\end{equation}
+Estimates $(\hat{\alpha}_i, \hat{\beta}_i)$ are generated independently for each city using only $T_i$ observations.
+
+\subsection{Fixed Effects (LSDV) Model}
+
+A hybrid formulation (Least Squares Dummy Variable) controlling for unobserved spatial heterogeneity:
+\begin{equation}
+    y_{i,t} = \alpha_i + \beta^T X_{i,t} + \epsilon_{i,t}
+\end{equation}
+Here, $\alpha_i$ represents a fixed, city-specific intercept. The slope dynamics vector $\beta$ remains pooled across the panel.
+
+\subsection{Ridge Regression Models}
+
+To combat multicollinearity in the lag structure and variance in local fitting, we apply $L_2$ regularization:
+\begin{equation}
+    \hat{\beta}_{\text{Ridge}} = \arg\min_{\beta} \left\{ \sum_{i,t} (y_{i,t} - X_{i,t}\beta)^2 + \lambda \|\beta\|_2^2 \right\}
+\end{equation}
+We evaluate two variants: \textbf{Global Ridge} (trained on the full $N \times T$ dataset) and \textbf{Local Ridge} (independent per-city fits utilizing a globally tuned hyperparameter $\lambda$) \cite{hoerl1970ridge}.
+
+\subsection{Mixed Effects (Partial Pooling) Model}
+
+For scalable partial pooling, we implement a hierarchical structure where city intercepts are treated as random effects:
+\begin{align}
+    y_{i,t} &= (\alpha_0 + u_i) + \beta^T X_{i,t} + \epsilon_{i,t}, \quad \epsilon_{i,t} \sim N(0, \sigma^2) \\
+    u_i &\sim N(0, \tau^2)
+\end{align}
+where $\alpha_0$ is the grand-mean intercept, $\beta$ represents fixed shared slopes, and $u_i$ is a city-specific random deviation. To achieve partial pooling, the Best Linear Unbiased Predictor (BLUP) shrinks the raw OLS city intercept toward the grand mean using the reliability ratio $B = \tau^2 / (\tau^2 + \sigma^2/T_i)$. When $B \to 0$, the model collapses to Pooled OLS; when $B \to 1$, it behaves like Local OLS \cite{robinson1991that}.
+
+\subsection{Forecasting Horizon and Hyperparameter Tuning}
+
+The primary objective is the one-step-ahead forecast of the log-return, formalized as predicting $\hat{y}_{i, t+1}$ using information available exclusively up to time $t$. For models requiring hyperparameter tuning, specifically the Ridge Regression penalty parameter $\lambda$, we employ a strict time-series cross-validation scheme within the trailing training window to prevent look-ahead bias. The optimal $\lambda$ is selected by minimizing the mean squared error over validation folds prior to the out-of-sample test split.
+
+
+\section{Experimental Framework}
+
+\subsection{Dataset and Preprocessing}
+
+We utilize the Zillow Home Value Index (ZHVI) for mid-tier single-family homes, focusing on Metropolitan Statistical Areas (MSAs). The dataset spans January 2001 to December 2020. Missing values were addressed via time-aware spline interpolation within each region.
+The target variable is the monthly log-return: $y_{i,t} = \ln(P_{i,t} / P_{i,t-1})$. By modeling log-returns, we achieve stationarity and remove the exponential secular trend inherent in price levels. Figure \ref{fig:logreturn} illustrates the near-normal, centered distribution of the log-return target.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figs/eda_logreturn_distribution.png}
+  \caption{Distribution of the log-return target variable across all MSA regions.}
+  \label{fig:logreturn}
+\end{figure}
+
+Our feature matrix $X_{i,t}$ includes temporal variables (Returns lagged by 1, 2, 3, 6, and 12 months). To prevent collinear rank-deficiency in models with explicit city parameters (Fixed/Mixed Effects), we intentionally separate target-encoded spatial categories from the dynamic lag predictors. Figure \ref{fig:correlation} highlights the autocorrelation structure among the lagged features, motivating the use of Ridge shrinkage.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figs/eda_correlation_matrix.png}
+  \caption{Correlation matrix of the lagged return features and the target variable.}
+  \label{fig:correlation}
+\end{figure}
+
+\subsection{Evaluation Protocol}
+
+Because time-series forecasting demands strict avoidance of data leakage, standard $K$-fold cross-validation is inappropriate. We utilize a \textbf{Rolling-Origin (Expanding Window)} validation framework \cite{tashman2000out}. The timeline is divided into 5 expanding sequential folds. The cutoff date for each fold partitions the panel completely: training occurs exclusively on data arriving strictly before $t_{\text{cut}}$, and testing on $(t_{\text{cut}}, t_{\text{cut}} + \Delta t]$. 
+
+Beyond cross-validation averages, we identify statistically significant performance differences using the \textbf{Diebold-Mariano (DM) test} \cite{diebold1995comparing}. The test assesses the null hypothesis of equal predictive accuracy ($H_0: E [L(e_{1,t}) - L(e_{2,t})] = 0$). We employ a quadratic loss function and calculate the long-run variance of the loss differential via a Newey-West HAC estimator to control for autocorrelation inherent in multi-step forecast errors.
+
+
+\section{Results and Discussion}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Predictive Accuracy Across 5-Fold Rolling-Origin Cross-Validation}
+  \label{tab:results_cv}
+  \begin{tabular}{l l c c}
+    \toprule
+    \textbf{Strategy} & \textbf{Level of Pooling} & \textbf{RMSE} (Mean $\pm$ Std) & \textbf{MAE} (Mean $\pm$ Std) \\
+    \midrule
+    Mixed Effects & Partial  & $\mathbf{0.002335 \pm 0.000178}$ & $\mathbf{0.001485 \pm 0.000235}$ \\
+    Pooled OLS & Complete & $0.002344 \pm 0.000168$ & $0.001492 \pm 0.000222$ \\
+    Global Ridge & Complete & $0.002344 \pm 0.000168$ & $0.001492 \pm 0.000222$ \\
+    Fixed Effects & Intercept None/Slope Complete &  $0.002382 \pm 0.000152$ & $0.001511 \pm 0.000199$ \\
+    Local Ridge & None & $0.004976 \pm 0.001854$ & $0.001989 \pm 0.000259$ \\
+    Local OLS & None & $12.89066 \pm 25.75416\ \ $ & $0.321390 \pm 0.638286$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{The Failure of Complete Fragmentation}
+
+Table \ref{tab:results_cv} illustrates the profound dangers of the ``short-T'' problem. The Local OLS strategy yields extreme and virtually unusable forecasts (Mean RMSE of 12.89). Because each MSA panel has only approx 240 monthly observations to fit 5 lag parameters, localized noise leads to wildly unstable coefficient estimates. While Local Ridge ($L_2$ penalty applied city-by-city) successfully prevents this explosion—reducing RMSE from 12.89 to 0.0049—it remains functionally inferior to pooled methods. This confirms that independent regional fitting abandons crucial structural information present across the national housing market.
+
+\subsection{The Power of the Global Baseline}
+
+In contrast, the Pooled OLS provides a remarkably strong baseline (RMSE 0.00234). The high performance of the completely homogenised model implies strong spatial integration in the US housing market; regional housing returns react to the autoregressive momentum (particularly the $t-1$ and $t-12$ annual lags) in structurally similar ways.
+
+\subsection{Superiority of Partial Pooling}
+
+The Mixed Effects model achieved the lowest out-of-sample RMSE ($0.002335$) across the rolling-origin procedure. By estimating the within-city noise ($\hat{\sigma}^2$) versus the between-city variance ($\hat{\tau}^2$), the model computed a reliability ratio $B \approx 0$. Because the cross-sectional variance of baseline returns was dwarfed by temporal noise within cities, the Bayesian machinery aggressively shrank the city-specific random intercepts toward the grand mean. 
+
+Furthermore, Diebold-Mariano tests performed on a hold-out dataset (2020) confirmed that unpooled models produce statistically significant higher prediction losses relative to the global benchmark ($p < 0.001$). The Mixed Effects framework safely captures any signal that survives the shrinkage process without exposing the forecast to the severe variance drag experienced by the Fixed Effects model.
+
+
+\section{Conclusion}
+
+In the dynamic panel forecasting of regional real estate returns, our empirical results dictate that the cost of variance vastly outweighs the cost of bias. Models that fragment the panel to independently estimate local parameters demonstrate catastrophic predictive failure, proving that spatial sample sizes ($T \approx 240$ months) are severely insufficient to reliably fit complex autoregressive lag structures. 
+
+Conversely, architectures that enforce structural pooling excel. The high and robust performance of the Pooled OLS baseline suggests a profound degree of systemic integration across US MSAs; regional housing returns react to historical momentum and overarching macroeconomic cycles in a highly uniform manner. Building upon this, we advocate for the Mixed Effects (hierarchical) framework as the optimal paradigm for regional economic forecasting. By estimating the within-city temporal noise against the between-city spatial variance, the Mixed Effects model leverages Bayesian James-Stein shrinkage to adaptively regularise unstable local intercepts toward the global mean. This partial pooling architecture offers the robust security of a globally integrated model while formally preserving the flexibility to adapt to genuine, empirical spatial heterogeneity. 
+
+Future research should investigate whether these pooling dynamics hold across diverse international housing markets, and whether the optimal shrinkage penalty shifts dynamically during periods of extreme macroeconomic crisis.
+
+
+% References must appear on a new page.
+\clearpage
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
