@@ -12,4 +12,8 @@ dependencies = [
     "seaborn>=0.13.0",
     "plotly>=5.18.0",
     "statsmodels>=0.14.6",
+    "lightgbm>=4.6.0",
+    "xgboost>=3.2.0",
+    "scikit-learn>=1.8.0",
+    "torch>=2.10.0",
 ]

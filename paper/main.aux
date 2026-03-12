@@ -1,0 +1,158 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{ref_fmem2023}
+\citation{ref_krause_bitter}
+\@writefile{toc}{\contentsline {title}{Spatiotemporal Housing Price Prediction: Comparing Functional Semiparametric Models with Modern Machine Learning Approaches}{1}{chapter.1}\protected@file@percent }
+\@writefile{toc}{\authcount {4}}
+\@writefile{toc}{\contentsline {author}{Nguyen Trinh Quy \and Nguyen Cong Minh \and Le Pham Hue Chi \and Nguyen Do Nhat Quang }{1}{chapter.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1.1}\protected@file@percent }
+\newlabel{sec:intro}{{1}{1}{Introduction}{section.1.1}{}}
+\citation{ref_zillow}
+\citation{ref_rosen}
+\citation{ref_anselin}
+\citation{ref_ramsay_2002}
+\citation{ref_fmem2023}
+\citation{ref_zhang_fcar}
+\citation{ref_shen1998}
+\citation{ref_rosen}
+\citation{ref_anselin}
+\citation{ref_pijnenburg}
+\citation{ref_krause_bitter}
+\citation{ref_ramsay_2002}
+\citation{ref_li_guan2014}
+\citation{ref_zhang_fcar}
+\citation{ref_glynn2022}
+\citation{ref_zhang_li2022}
+\citation{ref_fmem2023}
+\citation{ref_park_bae}
+\citation{ref_ho2021}
+\citation{ref_truong2020}
+\citation{ref_fan2022}
+\citation{ref_mullainathan}
+\citation{ref_yazdani2021}
+\citation{ref_guo2020}
+\citation{ref_hochreiter1997}
+\citation{ref_kim2020}
+\citation{ref_nunna2023}
+\citation{ref_shi2023}
+\citation{ref_zhang_nlp2024}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{3}{section.1.2}\protected@file@percent }
+\newlabel{sec:related}{{2}{3}{Related Work}{section.1.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Statistical and Functional Models}{3}{subsection.1.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Machine Learning for Housing Price Prediction}{3}{subsection.1.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Deep Learning and Temporal Models}{3}{subsection.1.2.3}\protected@file@percent }
+\citation{ref_lee2022}
+\citation{ref_samal2022}
+\citation{ref_pijnenburg}
+\citation{ref_fmem2023}
+\citation{ref_zillow}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Spatiotemporal Forecasting}{4}{subsection.1.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Positioning of the Present Work}{4}{subsection.1.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Data Description}{4}{section.1.3}\protected@file@percent }
+\newlabel{sec:data}{{3}{4}{Data Description}{section.1.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Dataset}{4}{subsection.1.3.1}\protected@file@percent }
+\citation{ref_fmem2023}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Descriptive statistics of the ZHVI dataset.}}{5}{table.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:data_summary}{{1}{5}{Descriptive statistics of the ZHVI dataset}{table.caption.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces National median ZHVI trajectory (Jan 2001 -- Jan 2026). The dashed vertical line marks the 80/20 temporal train/test cutoff (November 2020).}}{5}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:price_trend}{{1}{5}{National median ZHVI trajectory (Jan 2001 -- Jan 2026). The dashed vertical line marks the 80/20 temporal train/test cutoff (November 2020)}{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Target Variable: Monthly Log Return}{5}{subsection.1.3.2}\protected@file@percent }
+\newlabel{eq:logreturn}{{1}{5}{Target Variable: Monthly Log Return}{equation.1.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Feature Engineering}{5}{subsection.1.3.3}\protected@file@percent }
+\newlabel{sec:features}{{3.3}{5}{Feature Engineering}{subsection.1.3.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Distribution of monthly log-returns in the training (blue, 2001--2020) and test (red, 2020--2026) splits.}}{6}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:logreturn_dist}{{2}{6}{Distribution of monthly log-returns in the training (blue, 2001--2020) and test (red, 2020--2026) splits}{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Lag features.}{6}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{City target encoding.}{6}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Methodology}{6}{section.1.4}\protected@file@percent }
+\newlabel{sec:method}{{4}{6}{Methodology}{section.1.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Research Pipeline}{6}{subsection.1.4.1}\protected@file@percent }
+\newlabel{sec:pipeline}{{4.1}{6}{Research Pipeline}{subsection.1.4.1}{}}
+\citation{ref_fmem2023}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Systematic housing price prediction research pipeline.}}{7}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:pipeline}{{3}{7}{Systematic housing price prediction research pipeline}{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Reference Model: FST-SM}{7}{subsection.1.4.2}\protected@file@percent }
+\newlabel{eq:fstsm}{{2}{7}{Reference Model: FST-SM}{equation.1.4.2}{}}
+\citation{ref_breiman}
+\citation{ref_chen_xgboost}
+\citation{ref_ke_lgbm}
+\citation{ref_hochreiter1997}
+\newlabel{eq:kl}{{3}{8}{Reference Model: FST-SM}{equation.1.4.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Machine Learning Models}{8}{subsection.1.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Linear Regression (Ridge).}{8}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Random Forest (RF).}{8}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{XGBoost.}{8}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{LightGBM.}{8}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{LSTM.}{8}{section*.12}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Model hyperparameter settings.}}{9}{table.caption.13}\protected@file@percent }
+\newlabel{tab:hyperparams}{{2}{9}{Model hyperparameter settings}{table.caption.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Evaluation Protocol}{9}{subsection.1.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experiments}{9}{section.1.5}\protected@file@percent }
+\newlabel{sec:experiments}{{5}{9}{Experiments}{section.1.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Experimental Setup}{9}{subsection.1.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Data Split}{9}{subsection.1.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Results}{9}{section.1.6}\protected@file@percent }
+\newlabel{sec:results}{{6}{9}{Results}{section.1.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Quantitative Comparison}{9}{subsection.1.6.1}\protected@file@percent }
+\citation{ref_fmem2023}
+\citation{ref_fmem2023}
+\citation{ref_fmem2023}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Model comparison on ZHVI test set (894 metro areas, Nov.~2020--Jan.~2026). Bold = best per column. $\uparrow $~higher is better; $\downarrow $~lower is better.}}{10}{table.caption.14}\protected@file@percent }
+\newlabel{tab:results}{{3}{10}{Model comparison on ZHVI test set (894 metro areas, Nov.~2020--Jan.~2026). Bold = best per column. $\uparrow $~higher is better; $\downarrow $~lower is better}{table.caption.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Model performance across RMSE, MAE, MAPE, and R$^2$ metrics (log-return domain). Gold-bordered bars indicate the best value in each metric.}}{10}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:model_comparison}{{4}{10}{Model performance across RMSE, MAE, MAPE, and R$^2$ metrics (log-return domain). Gold-bordered bars indicate the best value in each metric}{figure.caption.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Feature Importance}{10}{subsection.1.6.2}\protected@file@percent }
+\citation{ref_fmem2023}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Predicted vs.\ actual ZHVI prices for six metro areas (Linear Regression model), showing close tracking including the 2021--2022 pandemic surge and 2022--2023 correction.}}{11}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:pred_vs_actual}{{5}{11}{Predicted vs.\ actual ZHVI prices for six metro areas (Linear Regression model), showing close tracking including the 2021--2022 pandemic surge and 2022--2023 correction}{figure.caption.16}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Discussion}{11}{section.1.7}\protected@file@percent }
+\newlabel{sec:discussion}{{7}{11}{Discussion}{section.1.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Why Linear Models Win on ZHVI}{11}{subsection.1.7.1}\protected@file@percent }
+\citation{ref_shi2023}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Normalised feature importance for Random Forest (left), XGBoost (centre), and LightGBM (right). \texttt  {lag\_1} dominates all three, consistent with the FST-SM's $\hat  {\beta }_1$ being the largest fixed-effect coefficient.}}{12}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:feature_importance}{{6}{12}{Normalised feature importance for Random Forest (left), XGBoost (centre), and LightGBM (right). \texttt {lag\_1} dominates all three, consistent with the FST-SM's $\hat {\beta }_1$ being the largest fixed-effect coefficient}{figure.caption.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}LSTM Performance and Limitations}{12}{subsection.1.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Statistical vs.\ ML Approaches: Complementary Strengths}{13}{subsection.1.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Implications for Practice}{13}{subsection.1.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Limitations and Future Work}{13}{subsection.1.7.5}\protected@file@percent }
+\citation{ref_fmem2023}
+\citation{ref_shi2023}
+\bibstyle{unsrt}
+\bibcite{ref_fmem2023}{1}
+\bibcite{ref_zillow}{2}
+\bibcite{ref_rosen}{3}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion}{14}{section.1.8}\protected@file@percent }
+\newlabel{sec:conclusion}{{8}{14}{Conclusion}{section.1.8}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Acknowledgments.}{14}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Disclosure of Interests.}{14}{section*.19}\protected@file@percent }
+\bibcite{ref_anselin}{4}
+\bibcite{ref_ramsay_2002}{5}
+\bibcite{ref_zhang_fcar}{6}
+\bibcite{ref_zhang_li2022}{7}
+\bibcite{ref_li_guan2014}{8}
+\bibcite{ref_shen1998}{9}
+\bibcite{ref_glynn2022}{10}
+\bibcite{ref_pijnenburg}{11}
+\bibcite{ref_krause_bitter}{12}
+\bibcite{ref_breiman}{13}
+\bibcite{ref_chen_xgboost}{14}
+\bibcite{ref_ke_lgbm}{15}
+\bibcite{ref_hochreiter1997}{16}
+\bibcite{ref_mullainathan}{17}
+\bibcite{ref_park_bae}{18}
+\bibcite{ref_ho2021}{19}
+\bibcite{ref_truong2020}{20}
+\bibcite{ref_fan2022}{21}
+\bibcite{ref_kim2020}{22}
+\bibcite{ref_nunna2023}{23}
+\bibcite{ref_shi2023}{24}
+\bibcite{ref_guo2020}{25}
+\bibcite{ref_yazdani2021}{26}
+\bibcite{ref_lee2022}{27}
+\bibcite{ref_samal2022}{28}
+\bibcite{ref_zhang_nlp2024}{29}
+\bibcite{ref_hyndman2021}{30}
+\gdef \@abspage@last{16}

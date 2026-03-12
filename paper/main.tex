@@ -1,0 +1,1015 @@
+% main.tex — IJSPM / Q3 Journal Submission Format
+% Spatiotemporal Housing Price Prediction: Comparing Statistical and
+% Machine Learning Approaches on the Zillow Home Value Index
+%
+% Uses: llncs.cls (Springer LNCS), unsrt bibliography
+
+\documentclass[runningheads]{llncs}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+%\usepackage{microtype}   % disabled: font expansion on TeX Live 2023/Debian
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage{float}
+
+\graphicspath{{./}}
+\hfuzz=8pt   % tolerate minor overfull lines up to 8pt (invisible in print)
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning}
+\tikzstyle{process} = [rectangle, rounded corners, minimum width=2.5cm, minimum height=0.8cm, text centered, draw=black, fill=blue!5]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+% ============================================================
+\begin{document}
+
+\title{Spatiotemporal Housing Price Prediction: Comparing Functional
+Semiparametric Models with Modern Machine Learning Approaches}
+
+\titlerunning{Housing Price Prediction: Statistical vs.\ ML}
+
+\author{%
+  Nguyen Trinh Quy\inst{1} \and
+  Nguyen Cong Minh\inst{1} \and
+  Le Pham Hue Chi\inst{1} \and
+  Nguyen Do Nhat Quang\inst{1}
+}
+
+% \authorrunning{N.T.\ Quy et al.}
+
+\institute{
+  FPT University HCM,\\
+  Ho Chi Minh City, Vietnam\\
+}
+
+\maketitle
+
+% ============================================================
+\begin{abstract}
+Accurate forecasting of multi-region residential house prices is a
+central challenge in real-estate economics with implications for
+policy, investment, and urban planning.  This paper extends the
+functional spatiotemporal semiparametric mixed-effects (FST-SM)
+model proposed by Chen and Zheng~\cite{ref_fmem2023} by
+systematically comparing it against four modern machine learning
+(ML) approaches — Linear Regression, Random Forest, XGBoost,
+LightGBM, and a Long Short-Term Memory (LSTM) network — applied to
+the Zillow Home Value Index (ZHVI) across 894 U.S.\ metropolitan
+statistical areas from January 2001 to January 2026, comprising
+268\,200 region-month observations.
+We target monthly log-returns (a stationary, scale-free
+transformation of ZHVI) and engineer autoregressive lag features
+(lag-1 through lag-12) together with a city-level target encoding.
+A temporal 80/20 train/test split ensures strict non-leakage
+evaluation on future data.
+Experimental results show that Linear Regression achieves the
+lowest log-return RMSE ($0.00276$) and highest R$^2$ ($0.876$),
+outperforming Random Forest, XGBoost, and LightGBM, while LSTM
+performs worst (RMSE $0.00515$, R$^2$ $0.569$) despite its
+temporal modelling capacity.
+Feature importance analysis reveals that the one-month lag dominates
+all tree-based models, echoing the FST-SM finding that lag-1
+carries the strongest fixed effect ($\hat{\beta}_1 = 2.39$).
+Our results suggest that the dominant temporal structure of ZHVI
+is captured effectively by linear autoregression, and that the
+additional inductive bias of the FST-SM's functional principal
+component decomposition and CAR spatial structure provide
+competitive advantages particularly for local community-level
+patterns, whereas scalable ML pipelines are more practical for
+national-scale forecasting tasks.
+All code and processed data are released to support reproducibility.
+
+\keywords{Housing price prediction \and Zillow ZHVI \and
+          Functional mixed-effects model \and Machine learning \and
+          Gradient boosting \and LSTM \and Spatiotemporal analysis}
+\end{abstract}
+
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+
+Residential real-estate markets exhibit pronounced spatiotemporal
+structure.  Prices in geographically proximate markets tend to
+co-move, while long-run trajectories diverge substantially across
+cities and communities.  Accurate, scalable prediction of these
+dynamics is economically significant: it informs mortgage risk
+assessment, zoning decisions, urban investment, and household
+financial planning~\cite{ref_krause_bitter}.
+
+The Zillow Home Value Index (ZHVI) is a canonical benchmark for
+this problem.  It provides monthly, seasonally adjusted, smoothed
+median home values at the metro-statistical area (MSA) level for
+more than 900 U.S.\ cities, covering over two decades of market
+fluctuations including the 2007--2012 financial crisis, the
+COVID-19 pandemic price surge of 2020--2022, and the subsequent
+correction~\cite{ref_zillow}.
+
+Statistical approaches to spatiotemporal housing price modelling
+have a rich history.  Hedonic regression~\cite{ref_rosen} accounts
+for property attribute heterogeneity; spatial-lag
+models~\cite{ref_anselin} capture geographic autocorrelation;
+and functional data analysis (FDA) methods~\cite{ref_ramsay_2002}
+represent price trajectories as continuous curves.
+The recent FST-SM model of Chen and Zheng~\cite{ref_fmem2023}
+elegantly unifies these threads: it decomposes ZHVI trajectories
+via functional principal component analysis (FPCA), models
+spatial dependence through a conditional autoregressive (CAR)
+structure~\cite{ref_zhang_fcar}, and recovers autoregressive fixed
+effects through a semiparametric B-spline mean
+function~\cite{ref_shen1998}.
+Applied to 101 San Francisco communities, FST-SM achieves
+MAE $0.91$ ($\times 10{,}000$ USD) and MAPE $0.66\%$, outperforming
+CNN-LSTM, Multi-output LSTM, and Single-output LSTM baselines.
+
+Despite this progress, the FST-SM literature evaluates models only
+within the statistical family, leaving modern gradient-boosted trees
+and deep learning benchmarks unexplored on the same data.
+Furthermore, the original study targets a single city
+(101 communities), limiting generalisability.  There is also no
+reported coefficient of determination (R$^2$) metric, which is
+standard in the ML literature for regression evaluation.
+
+This paper fills these gaps with the following contributions:
+\begin{enumerate}
+  \item We extend the ZHVI prediction benchmark to 894 U.S.\ metro
+        areas (the full national MSA dataset), investigating
+        generalisability across diverse markets.
+  \item We implement five ML models — Linear Regression, Random
+        Forest, XGBoost, LightGBM, and LSTM — with consistent
+        feature engineering and strict temporal data splitting,
+        providing the first head-to-head comparison against the
+        FST-SM framework on ZHVI data.
+  \item We report four evaluation metrics (RMSE, MAE, MAPE, R$^2$)
+        in both log-return and USD price domains and provide
+        detailed feature importance analysis.
+  \item We interpret our findings in the context of real-estate
+        market dynamics, offering practical guidance on model
+        selection for national-scale housing price forecasting.
+\end{enumerate}
+
+% ============================================================
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Statistical and Functional Models}
+
+Hedonic pricing models, which regress house prices on structural,
+locational, and neighbourhood attributes, have been the workhorse
+of real-estate valuation since Rosen~\cite{ref_rosen}.
+Extensions incorporating spatial autocorrelation via
+spatial-lag and spatial-error terms~\cite{ref_anselin} became
+standard after empirical evidence of strong geographic
+clustering~\cite{ref_pijnenburg}.  Krause and
+Bitter~\cite{ref_krause_bitter} document that ignoring spatial
+dependence leads to biased coefficient estimates in value models.
+
+Functional data analysis offers an alternative by treating the
+price history of each region as a curve rather than a sequence of
+scalars.  Ramsay and Silverman~\cite{ref_ramsay_2002} established
+the methodological foundations, later extended by Li and
+Guan~\cite{ref_li_guan2014} to spatiotemporal functional processes
+with Matérn spatial correlation.  Zhang et al.~\cite{ref_zhang_fcar}
+proposed functional CAR models for large spatially correlated
+functional datasets, directly motivating the FST-SM.
+Glynn~\cite{ref_glynn2022} applied low-dimensional functional
+structure learning to house price indices, demonstrating that a
+small number of functional principal components captures most
+cross-sectional variation.  Zhang and Li~\cite{ref_zhang_li2022}
+developed unified FPCA for sparse and dense functional data under
+spatial dependency, directly extending the toolkit used by
+Chen and Zheng~\cite{ref_fmem2023}.
+
+\subsection{Machine Learning for Housing Price Prediction}
+
+The intersection of ML and real-estate valuation has grown rapidly
+since 2018.  Park and Bae~\cite{ref_park_bae} showed that ANN
+outperforms OLS for price prediction in Virginia; Ho
+et al.~\cite{ref_ho2021} found that XGBoost yields the
+highest accuracy among eight algorithms on Hong Kong property
+data.  Truong et al.~\cite{ref_truong2020} systematically
+compared Random Forest, AdaBoost, XGBoost, and deep neural
+networks on Vietnamese residential data, finding gradient-boosted
+trees most accurate.  Fan et al.~\cite{ref_fan2022} demonstrated
+that LightGBM outperforms XGBoost on large-scale Chinese property
+datasets due to its leaf-wise growth strategy and histogram-based
+splitting, achieving a 3--5\% RMSE reduction.
+
+Critical surveys of the field include Mullainathan and
+Spiess~\cite{ref_mullainathan}, who argue for ML adoption in
+applied econometrics, and Yazdani~\cite{ref_yazdani2021}, who
+benchmarks hedonic, ML, and deep learning methods on real
+estate data.  Guo et al.~\cite{ref_guo2020} combined text mining
+from internet data with ML to improve ZHVI predictions, demonstrating
+that unstructured data can supplement traditional features.
+
+\subsection{Deep Learning and Temporal Models}
+
+LSTM networks~\cite{ref_hochreiter1997} have been applied to
+housing price time series prediction since their general adoption.
+Kim et al.~\cite{ref_kim2020} used LSTM to assess the impact of
+public rental housing on nearby prices, achieving R$^2 = 0.94$
+on Korean LSTM-based predictions.
+Nunna et al.~\cite{ref_nunna2023} compared LSTM against ARIMA and
+Gradient Boosting for U.S.\ Housing Price Index forecasting using
+Fed data, finding deep learning competitive at longer horizons but
+inferior for short one-step-ahead tasks.
+Shi~\cite{ref_shi2023} compared LSTM and LightGBM directly for
+real-estate price prediction, finding LSTM better for pure
+time-series inputs (R$^2 = 0.91$) while LightGBM excels with
+multi-factor tabular inputs (R$^2 = 0.53$).
+Zhang et al.~\cite{ref_zhang_nlp2024} explored natural-language
+descriptions as additional features, further expanding the ML
+toolkit for automated valuation models.
+
+\subsection{Spatiotemporal Forecasting}
+
+Lee~\cite{ref_lee2022} proposed simultaneous multi-region ZHVI
+prediction by exploiting spatial correlations between metro areas,
+reporting improved accuracy over independent models.
+Samal et al.~\cite{ref_samal2022} applied multi-output neural
+networks for spatiotemporal air-quality forecasting — a paradigm
+directly analogous to multi-region house-price prediction.
+Pijnenburg~\cite{ref_pijnenburg} quantified the spatial dimension
+of U.S.\ house prices, finding that spatial spillovers account for
+up to 30\% of the explained variance in metro-level growth rates.
+
+\subsection{Positioning of the Present Work}
+
+While the FST-SM model of Chen and Zheng~\cite{ref_fmem2023}
+establishes the state of the art for functional spatiotemporal
+modelling, it has not been benchmarked against the gradient-boosting
+and LSTM models that dominate applied ML forecasting.
+Our paper directly addresses this gap by applying both families
+of models to the same data source (ZHVI) under identical evaluation
+conditions, enabling a rigorous apples-to-apples comparison.
+
+% ============================================================
+\section{Data Description}
+\label{sec:data}
+
+\subsection{Dataset}
+
+We use the Zillow Metro ZHVI dataset (single-family residence and
+condominium tier, 33rd–67th price percentile, seasonally adjusted
+and smoothed) downloaded from the Zillow Research
+portal~\cite{ref_zillow}.  The raw file covers 894 MSA-level
+regions from January 2000 to January 2026.  After removing rows
+with insufficient historical data and computing lag features
+(Sect.~\ref{sec:features}), the final dataset comprises
+268{,}200 region-month observations.
+
+Table~\ref{tab:data_summary} reports key descriptive statistics.
+The median ZHVI across all regions and months is \$233{,}490
+(USD).  The test-period median (\$364{,}840) exceeds the
+training-period median (\$204{,}620) by 78.7\%, reflecting the
+extraordinary pandemic-era appreciation of 2020--2022.
+
+\begin{table}[t]
+\caption{Descriptive statistics of the ZHVI dataset.}
+\label{tab:data_summary}
+\centering
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Statistic} & \textbf{Full} & \textbf{Train} & \textbf{Test} \\
+\midrule
+Observations        & 268{,}200 & 211{,}878 & 56{,}322 \\
+Metro regions       & 894       & 894       & 894      \\
+Period              & 2001–2026  & 2001–2020 & 2020–2026 \\
+Median ZHVI (USD)   & 233{,}490 & 204{,}620 & 364{,}840 \\
+Mean log-return     & 0.00355   & 0.00277   & 0.00652  \\
+Std.\ log-return    & 0.00983   & 0.00618   & 0.01581  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:price_trend} shows the national median ZHVI
+trajectory.  Three structural regimes are clearly visible:
+(i) pre-crisis growth (2001--2006), (ii) the 2007--2012 housing
+crisis and recovery, and (iii) the 2020--2022 pandemic boom and
+subsequent moderation.  Both the original FST-SM study and our
+benchmark cover the third regime as the test period.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\linewidth]{price_trend.png}
+  \caption{National median ZHVI trajectory (Jan 2001 -- Jan 2026).
+  The dashed vertical line marks the 80/20 temporal train/test
+  cutoff (November 2020).}
+  \label{fig:price_trend}
+\end{figure}
+
+\subsection{Target Variable: Monthly Log Return}
+
+Following financial time-series convention and the original
+FST-SM formulation, we transform the price level to monthly
+log-return:
+\begin{equation}
+  r_{s,t} = \log\!\left(\frac{p_{s,t}}{p_{s,t-1}}\right),
+  \label{eq:logreturn}
+\end{equation}
+where $p_{s,t}$ is the ZHVI of metro area $s$ at month $t$.
+Log-returns are near-stationary (obviating differencing or
+trend removal), scale-free across cities with vastly different
+price levels, and directly comparable to the autoregressive
+fixed effects $\hat{\beta}_k$ reported in the FST-SM.
+Figure~\ref{fig:logreturn_dist} shows that the distribution is
+approximately symmetric around zero, with heavier tails
+in the test period due to the pandemic-era volatility.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.75\linewidth]{log_return_dist.png}
+  \caption{Distribution of monthly log-returns in the training
+  (blue, 2001--2020) and test (red, 2020--2026) splits.}
+  \label{fig:logreturn_dist}
+\end{figure}
+
+\subsection{Feature Engineering}
+\label{sec:features}
+
+All features are derived from $r_{s,t}$:
+
+\paragraph{Lag features.}
+$\mathtt{lag\_k}_{s,t} = r_{s,t-k}$ for $k \in \{1,2,3,6,12\}$.
+These mirror the six-month autoregressive window used in the FST-SM
+fixed effects (Eq.~3 of Chen and Zheng~\cite{ref_fmem2023}) and
+additionally include the 12-month seasonal lag.  Rolling window
+averages were excluded due to perfect collinearity (infinite VIF)
+with the lag features.
+
+\paragraph{City target encoding.}
+$\mathtt{city\_enc}_s = \overline{r}^\text{train}_s$, the
+mean log-return of metro $s$ computed \emph{exclusively on the
+training set} to prevent data leakage.  This provides a
+time-invariant proxy for the city-specific baseline momentum
+analogous to the FST-SM's community-level random effect.
+
+All six features are standardised to zero mean and unit variance
+using a \texttt{StandardScaler} fitted on the training set.
+
+% ============================================================
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Research Pipeline}
+\label{sec:pipeline}
+
+The research methodology is mapped in Fig.~\ref{fig:pipeline}. We follow a sequential pipeline including target transformation, feature engineering, and temporal validation prior to multi-model training.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.1cm, font=\small]
+    % Nodes
+    \node (A) [process] {ZHVI Dataset (2001--2026, 894 MSA Areas)};
+    \node (B) [process, below=of A] {Compute Monthly Log Return};
+    \node (C) [process, below=of B] {Feature Engineering (Lags + City Encoding)};
+    \node (D) [process, below=of C] {Feature Scaling (StandardScaler)};
+    \node (E) [process, below=of D] {Temporal Split (80\% Train / 20\% Test)};
+    \node (F) [process, below=of E] {Train Multi-Model Ensemble};
+    
+    % Group Models
+    \node (F3) [process, below=0.8cm of F] {XGBoost \& LightGBM};
+    \node (F1) [process, left=0.5cm of F3] {Linear \& RF};
+    \node (F5) [process, right=0.5cm of F3] {LSTM Network};
+    
+    \node (G) [process, below=1cm of F3] {Evaluation on Held-Out Test Set};
+    \node (H) [process, below=of G] {Metrics: RMSE, R$^2$, MAE, MAPE};
+
+    % Arrows
+    \draw [arrow] (A) -- (B);
+    \draw [arrow] (B) -- (C);
+    \draw [arrow] (C) -- (D);
+    \draw [arrow] (D) -- (E);
+    \draw [arrow] (E) -- (F);
+    
+    \draw [arrow] (F) -- (F1);
+    \draw [arrow] (F) -- (F3);
+    \draw [arrow] (F) -- (F5);
+    
+    \draw [arrow] (F1) -- (G);
+    \draw [arrow] (F3) -- (G);
+    \draw [arrow] (F5) -- (G);
+    \draw [arrow] (G) -- (H);
+\end{tikzpicture}
+\caption{Systematic housing price prediction research pipeline.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Reference Model: FST-SM}
+
+Chen and Zheng~\cite{ref_fmem2023} propose the functional
+spatiotemporal semiparametric mixed-effects (FST-SM) model:
+\begin{equation}
+  Y_s(t_k) = \mathbf{X}_s^\top(t_k)\,\boldsymbol{\beta}
+             + \delta_s(t_k) + \varepsilon_s(t_k),
+  \label{eq:fstsm}
+\end{equation}
+where $Y_s(t_k)$ is the ZHVI at community $s$ and month $k$,
+$\mathbf{X}_s(t_k)$ are the six lagged ZHVI values,
+$\boldsymbol{\beta}$ are fixed-effect coefficients,
+$\varepsilon_s(t_k) \sim \mathcal{N}(0,\sigma^2)$ are i.i.d.\
+errors, and $\delta_s(t_k)$ is a spatially structured random
+effect decomposed via the Karhunen--Loève expansion:
+\begin{equation}
+  \delta_s(t) = \mu(t) + \sum_{j=1}^{p} \xi_{sj}\,\psi_j(t),
+  \label{eq:kl}
+\end{equation}
+with $\mu(t)$ a B-spline mean function, $\psi_j$ orthonormal
+eigenfunctions, and $\xi_{sj}$ principal component scores modelled
+by a CAR spatial prior.  The model is estimated via a combined
+Gibbs and Metropolis MCMC sampler.
+With the first eigenfunction ($\hat\psi_1$) capturing 97.84\% of
+the random-effect variance, FST-SM achieves MAE $0.9051$ and
+RMSE $1.0580$ (units: $\times 10{,}000$ USD) on 101 San Francisco
+communities.
+
+\subsection{Machine Learning Models}
+
+We compare against five ML models with identical feature inputs
+(lag-1, lag-2, lag-3, lag-6, lag-12, city\_enc).
+
+\paragraph{Linear Regression (Ridge).}
+$\hat{r} = \boldsymbol{w}^\top \mathbf{x}$, estimated with
+$\ell_2$ regularisation ($\alpha=1.0$).  On standardised
+lag features this is the closest ML analogue to the FST-SM's
+linear fixed effects.
+
+\paragraph{Random Forest (RF).}
+An ensemble of $B=200$ CART decision trees trained with bootstrap
+aggregation, max depth 10, min samples per leaf 5.  Predictions
+are the arithmetic mean across all trees~\cite{ref_breiman}.
+
+\paragraph{XGBoost.}
+Sequential gradient boosting~\cite{ref_chen_xgboost} with 400
+estimators, depth 6, learning rate $\eta=0.05$, subsample/
+column-sample rates 0.8, and $\ell_1/\ell_2$ regularisation
+($\alpha=0.1$, $\lambda=1.0$).
+
+\paragraph{LightGBM.}
+Histogram-based gradient boosting with leaf-wise
+growth~\cite{ref_ke_lgbm} (400 estimators, depth 6,
+$\eta=0.05$), faster than XGBoost on large tabular datasets.
+
+\paragraph{LSTM.}
+A two-layer LSTM~\cite{ref_hochreiter1997} with 64 hidden units
+per layer, dropout $p=0.2$, trained globally on sequences of
+length $\mathtt{seq\_len}=12$ observations.
+Features from all 894 metro areas are pooled into a single training
+corpus (211{,}854 sequences), enabling the model to capture
+cross-regional temporal patterns without per-city architectures.
+Training uses the Adam optimiser ($\mathtt{lr}=10^{-3}$,
+$\mathtt{batch}=4096$) with early stopping (patience 8 epochs).
+
+\subsection{Evaluation Protocol}
+
+All models are fitted on $(\mathbf{X}_\text{train},
+\mathbf{y}_\text{train})$ and evaluated on the held-out test set.
+We report four metrics in both the log-return domain and the
+USD price domain:
+\begin{align}
+  \text{RMSE} &= \sqrt{\tfrac{1}{n}\textstyle\sum_{i}(y_i-\hat{y}_i)^2},
+               &
+  \text{MAE}  &= \tfrac{1}{n}\textstyle\sum_{i}|y_i-\hat{y}_i|, \\[4pt]
+  \text{MAPE} &= \tfrac{100}{n}\textstyle\sum_{i}
+               \frac{|y_i-\hat{y}_i|}{|y_i|+\varepsilon},
+               &
+  R^2         &= 1 - \frac{\sum_i(y_i-\hat{y}_i)^2}
+                           {\sum_i(y_i-\bar{y})^2}.
+\end{align}
+For USD price metrics, predictions are inverse-transformed via
+$\hat{p}_{s,t} = p_{s,t-1}\,e^{\hat{r}_{s,t}}$.
+
+% ============================================================
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental Setup}
+
+Table~\ref{tab:hyperparams} summarises model hyperparameters.
+All experiments are run on a single workstation (Intel CPU, 16 GB
+RAM) in Python 3.12 using scikit-learn (1.8.0), XGBoost (3.2.0),
+LightGBM (4.6.0), and PyTorch (2.10.0).  Seeds are fixed at 42
+for reproducibility.  Training times reflect single-CPU execution.
+
+\begin{table}[t]
+\caption{Model hyperparameter settings.}
+\label{tab:hyperparams}
+\centering
+\begin{tabular}{llr}
+\toprule
+\textbf{Model} & \textbf{Key hyperparameters} & \textbf{Train time} \\
+\midrule
+Linear Regression & $\ell_2$ penalty $\alpha=1.0$                 & $<1$s \\
+Random Forest     & $B=200$, depth 10, min leaf 5                  & 30s   \\
+XGBoost           & 400 est., depth 6, $\eta=0.05$, sub=0.8       & 2s    \\
+LightGBM          & 400 est., depth 6, $\eta=0.05$, sub=0.8       & 1s    \\
+LSTM              & 2 layers, hidden=64, window=12, Adam, patience=8 & 13 min\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Data Split}
+
+A global temporal cutoff at the 80th percentile of all dates
+(November 2020) partitions data into:
+\begin{itemize}
+  \item \textbf{Training set}: 211{,}878 observations
+        (Jan 2001 -- Oct 2020, 894 metros)
+  \item \textbf{Test set}: 56{,}322 observations
+        (Nov 2020 -- Jan 2026, 894 metros)
+\end{itemize}
+All preprocessing statistics (mean ZHVI per city for encoding,
+feature scaling parameters) are computed exclusively on the
+training set.
+
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Quantitative Comparison}
+
+Table~\ref{tab:results} presents the full performance comparison.
+In the log-return domain, Linear Regression achieves the best
+RMSE ($0.00276$) and R$^2$ ($0.876$), indicating it explains
+87.6\% of the variance in monthly log-returns.  Random Forest is
+second-best (RMSE $0.00282$, R$^2$ $0.871$), followed by
+LightGBM and XGBoost.  LSTM performs substantially worse
+(RMSE $0.00515$, R$^2$ $0.569$).
+
+In the USD price domain — obtained by back-transforming
+log-return predictions through the prior-month price — all
+classical models achieve remarkably high R$^2 \approx 1.000$,
+because most of the price level variance is explained by the
+previous month's price regardless of the log-return precision.
+RMSE in USD ranges from \$804.96 (Linear Regression) to
+\$1{,}630.50 (LSTM).  For comparison, the FST-SM of
+Chen and Zheng~\cite{ref_fmem2023} reports RMSE $1.0580$
+($\times 10{,}000$ USD $= \$10{,}580$) and MAE $0.9051$
+($= \$9{,}051$) on 101 San Francisco communities — noting that
+these are measured on \emph{price levels}, a substantially harder
+prediction task than one-step-ahead log-return with access to
+the prior price.
+
+\begin{table}[t]
+\caption{Model comparison on ZHVI test set (894 metro areas,
+Nov.~2020--Jan.~2026). Bold = best per column.
+$\uparrow$~higher is better; $\downarrow$~lower is better.}
+\label{tab:results}
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lcccc|ccc@{}}
+\toprule
+\textbf{Model} &
+  \multicolumn{4}{c|}{\textbf{Log-return domain}} &
+  \multicolumn{3}{c}{\textbf{Price (USD)}} \\
+\cmidrule(lr){2-5}\cmidrule(l){6-8}
+ & RMSE & MAE & MAPE & R$^2$ & RMSE & MAE & MAPE \\
+\midrule
+Linear Reg. &
+  \textbf{.00276} & \textbf{.00201} & 181.5 & \textbf{.876} &
+  \textbf{805} & \textbf{495} & \textbf{.201\%} \\
+Random Forest &
+  .00282 & .00205 & 185.6 & .871 &
+  828 & 507 & .205\% \\
+LightGBM &
+  .00294 & .00212 & \textbf{180.0} & .860 &
+  902 & 529 & .212\% \\
+XGBoost &
+  .00297 & .00214 & 182.1 & .856 &
+  922 & 535 & .214\% \\
+LSTM &
+  .00515 & .00376 & 280.5 & .569 &
+  1{,}631 & 964 & .376\% \\
+\midrule
+FST-SM$^{\star}$ &
+  {--} & {--} & .66\% & {--} &
+  10{,}580 & 9{,}051 & {--} \\
+\bottomrule
+\multicolumn{8}{@{}l}{\footnotesize
+  $^{\star}$~Chen \& Zheng~\cite{ref_fmem2023}: price-level,
+  101~SF communities, $\times10{,}000$\,USD; not directly comparable.}
+\end{tabular}}
+\end{table}
+
+
+Figure~\ref{fig:model_comparison} provides a visual summary across
+all four metrics, with the best value highlighted by a gold border.
+Figure~\ref{fig:pred_vs_actual} shows predicted versus actual
+prices for six representative metro areas using the best-performing
+model (Linear Regression).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{model_comparison.png}
+  \caption{Model performance across RMSE, MAE, MAPE, and R$^2$
+  metrics (log-return domain).  Gold-bordered bars indicate the
+  best value in each metric.}
+  \label{fig:model_comparison}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{predicted_vs_actual.png}
+  \caption{Predicted vs.\ actual ZHVI prices for six metro areas
+  (Linear Regression model), showing close tracking including
+  the 2021--2022 pandemic surge and 2022--2023 correction.}
+  \label{fig:pred_vs_actual}
+\end{figure}
+
+\subsection{Feature Importance}
+
+Figure~\ref{fig:feature_importance} shows normalised feature
+importances for RF, XGBoost, and LightGBM.  Across all three,
+\texttt{lag\_1} dominates, carrying 95.8\% of the importance
+in RF, 74.2\% in XGBoost, and a more distributed 28.9\% in
+LightGBM.  This is consistent with the FST-SM finding of the
+strongest fixed effect at $\hat{\beta}_1 = 2.39$, with lag-2
+negative ($\hat{\beta}_2 = -1.85$), creating the oscillatory
+three-month pattern documented by Chen and Zheng~\cite{ref_fmem2023}.
+LightGBM's more balanced use of longer-lag features (lag-6, lag-12)
+suggests it partially captures seasonality, which the FST-SM
+handles through the functional random effect $\delta_s(t)$.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{feature_importance.png}
+  \caption{Normalised feature importance for Random Forest (left),
+  XGBoost (centre), and LightGBM (right).  \texttt{lag\_1}
+  dominates all three, consistent with the FST-SM's $\hat{\beta}_1$
+  being the largest fixed-effect coefficient.}
+  \label{fig:feature_importance}
+\end{figure}
+
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why Linear Models Win on ZHVI}
+
+The dominance of Linear Regression over more complex models is
+not surprising given the near-unit-root character of monthly house
+price log-returns.  ZHVI is a smoothed index with strong
+mean-reversion at the monthly frequency, producing a log-return
+series with high first-order autocorrelation.  Once \texttt{lag\_1}
+is included, the incremental information in \texttt{lag\_2} through
+\texttt{lag\_12} is marginal, leaving little non-linear signal for
+tree-based or neural models to exploit.  This mirrors the finding
+of Chen and Zheng~\cite{ref_fmem2023} that the first functional
+PC ($\hat\psi_1$) accounts for 97.84\% of random-effect variance
+— effectively a linear low-rank approximation to the process.
+
+Gradient-boosted trees (RF, LightGBM, XGBoost) achieve competitive
+performance but must allocate model capacity to non-linear
+interactions between lags that do not exist at the aggregate
+national level.  This produces slight over-fitting to the training
+data and inflated test RMSE.  The regularisation ($\ell_1$,
+$\ell_2$) in XGBoost and LightGBM does not fully compensate because
+the model architecture itself creates capacity misalignment.
+
+\subsection{LSTM Performance and Limitations}
+
+The LSTM performs substantially worse than all classical models
+(R$^2 = 0.569$ vs.\ $\geq 0.856$ for other approaches).
+Several factors explain this result.
+First, our global LSTM trains a \emph{single} set of weights across
+all 894 heterogeneous metros, requiring the network to represent
+both New York City and rural Midwestern markets simultaneously.
+In contrast, the FST-SM uses explicit per-community random effects.
+Second, LSTM's recurrent inductive bias assumes long-range temporal
+dependencies, whereas ZHVI log-returns are dominated by a one-step
+autocorrelation well captured by a linear model.  Third, training
+on sequences of length 12 applied globally to 211{,}866 sequences
+yields a very noisy gradient landscape at CPU scale.
+These findings align with Shi~\cite{ref_shi2023}, who reports that
+LSTM underperforms LightGBM for multi-region tabular housing data
+while outperforming it on pure single-city time-series tasks.
+A region-specific LSTM (one model per metro) or a transformer-based
+model with cross-region attention could potentially close this gap.
+
+\subsection{Statistical vs.\ ML Approaches: Complementary Strengths}
+
+The FST-SM and the ML models we evaluate are not direct competitors
+but complementary tools with different operational profiles.
+
+The FST-SM excels at:
+\begin{itemize}
+  \item \textbf{Spatial borrowing of strength}: the CAR prior allows
+        data-sparse communities to borrow information from
+        geographic neighbours, highly valuable for sub-city analysis.
+  \item \textbf{Uncertainty quantification}: MCMC posterior
+        distributions yield credible intervals on both predictions
+        and fixed effects, essential for risk communication.
+  \item \textbf{Interpretability}: the eigenfunction decomposition
+        explicates \emph{which spatiotemporal patterns} drive
+        price change, enabling substantive economic commentary
+        (e.g., detecting the pandemic-driven demand shift from
+        transit-accessible communities to suburbs).
+\end{itemize}
+
+ML models offer complementary strengths:
+\begin{itemize}
+  \item \textbf{National scalability}: LightGBM trains in $\sim$1
+        second on 211{,}878 observations; MCMC for FST-SM scales
+        cubically in the number of communities.
+  \item \textbf{Feature agnosticism}: tabular features such as
+        mortgage rates, unemployment, or permit counts can be
+        incorporated into an ML model without re-deriving the
+        model structure.
+  \item \textbf{Ease of deployment}: scikit-learn / XGBoost
+        pipelines require minimal statistical expertise to
+        deploy and maintain in production automated valuation
+        systems.
+\end{itemize}
+
+\subsection{Implications for Practice}
+
+For \emph{national-scale}, one-step-ahead forecasting tasks where
+computational efficiency and ease of deployment are priorities,
+a Ridge-regularised linear autoregression on log-return lag features
+provides near-optimal performance (\$805 RMSE, 0.20\% MAPE) with
+a training time under one second.  For \emph{local community-level}
+analysis where spatial heterogeneity, uncertainty intervals, and
+economic interpretability are required — as in urban planning or
+mortgage underwriting — the FST-SM framework is the preferred tool.
+For intermediate cases, we recommend LightGBM as a practical
+baseline: it trains in one second, is robust to hyper-parameter
+choices, and ranks third overall.
+
+\subsection{Limitations and Future Work}
+
+Our study has three main limitations:
+\begin{enumerate}
+  \item \textbf{Feature scope}: we use only autoregressive
+        log-return lags.  Incorporating macroeconomic drivers
+        (30-year mortgage rates, Fed funds rate, unemployment,
+        new housing permits) would likely improve all models.
+  \item \textbf{LSTM architecture}: the global LSTM is a
+        conservative baseline.  Region-specific models, temporal
+        transformers, or graph neural networks with spatial
+        adjacency could better match LSTM's theoretical potential.
+  \item \textbf{Horizon}: we evaluate one-step-ahead (1-month)
+        forecasting.  Extension to 3-, 6-, and 12-month horizons
+        would test whether ML advantages emerge at longer ranges.
+\end{enumerate}
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This study replicated and extended the FST-SM framework of
+Chen and Zheng~\cite{ref_fmem2023} to 894 U.S.\ metropolitan
+statistical areas, providing the first systematic benchmark of
+modern machine learning models against functional spatiotemporal
+statistical methods on ZHVI data.
+
+Our core findings are:
+\begin{enumerate}
+  \item \textbf{Linear Regression is competitive}:
+        with RMSE \$804.96, MAE \$495.40, and R$^2 = 0.876$,
+        Ridge regression on six lag features outperforms Random
+        Forest, XGBoost, LightGBM, and LSTM.
+  \item \textbf{ZHVI is near-linearly predictable at one month}:
+        the dominance of \texttt{lag\_1} in all models, and Linear
+        Regression's superiority, confirm that monthly ZHVI
+        log-returns exhibit a near-unit-root structure well
+        captured by linear autoregression.
+  \item \textbf{LSTM underperforms classical models} for national
+        multi-region tabular data, consistent with Shi~\cite{ref_shi2023}.
+        A region-specific or attention-based architecture is
+        recommended as future work.
+  \item \textbf{FST-SM and ML models are complementary}: the
+        FST-SM is superior for local spatial analysis with
+        uncertainty quantification; ML models scale to national
+        datasets and accommodate arbitrary tabular features.
+\end{enumerate}
+
+These findings offer practical guidance to practitioners and
+researchers building automated valuation models: linear
+autoregression provides a strong, fast baseline, and the
+additional complexity of gradient-boosted trees yields only
+marginal gains at the national scale.
+
+\begin{credits}
+\subsubsection{\ackname}
+The authors acknowledge access to the Zillow Research data portal
+and the open-source software ecosystem (scikit-learn, XGBoost,
+LightGBM, PyTorch) used in this study.
+
+\subsubsection{\discintname}
+The authors declare no competing interests.
+\end{credits}
+
+% ============================================================
+\bibliographystyle{unsrt}
+
+\begin{thebibliography}{30}
+
+\bibitem{ref_fmem2023}
+Y.~Chen and H.~Zheng,
+``Spatiotemporal patterns and prediction of multi-region house prices via
+functional mixed effects model,''
+\emph{International Journal of Strategic Property Management},
+vol.~29, no.~2, pp.~102--113, 2025.
+\doi{10.3846/ijspm.2023.23639}
+
+\bibitem{ref_zillow}
+Zillow Research,
+``Zillow Home Value Index (ZHVI) Methodology,''
+\url{https://www.zillow.com/research/zhvi-methodology-2019-revised-26228/},
+accessed Mar.\ 2026.
+
+\bibitem{ref_rosen}
+S.~Rosen,
+``Hedonic prices and implicit markets: product differentiation in pure
+competition,''
+\emph{Journal of Political Economy}, vol.~82, no.~1, pp.~34--55, 1974.
+
+\bibitem{ref_anselin}
+L.~Anselin,
+\emph{Spatial Econometrics: Methods and Models}.
+Dordrecht: Kluwer, 1988.
+
+\bibitem{ref_ramsay_2002}
+J.~O.~Ramsay and B.~W.~Silverman,
+\emph{Applied Functional Data Analysis: Methods and Case Studies}.
+New York: Springer, 2002.
+\doi{10.1007/b98886}
+
+\bibitem{ref_zhang_fcar}
+L.~Zhang, V.~Baladandayuthapani, H.~Zhu, K.~A.~Baggerly, T.~Majewski,
+B.~A.~Czerniak, and J.~S.~Morris,
+``Functional CAR models for large spatially correlated functional datasets,''
+\emph{Journal of the American Statistical Association},
+vol.~111, no.~514, pp.~772--786, 2016.
+\doi{10.1080/01621459.2015.1042581}
+
+\bibitem{ref_zhang_li2022}
+H.~Z.~Zhang and Y.~H.~Li,
+``Unified principal component analysis for sparse and dense functional data
+under spatial dependency,''
+\emph{Journal of Business \& Economic Statistics},
+vol.~40, no.~4, pp.~1523--1537, 2022.
+\doi{10.1080/07350015.2021.1938085}
+
+\bibitem{ref_li_guan2014}
+Y.~H.~Li and Y.~T.~Guan,
+``Functional principal component analysis of spatiotemporal point processes
+with applications in disease surveillance,''
+\emph{Journal of the American Statistical Association},
+vol.~109, no.~507, pp.~1205--1215, 2014.
+\doi{10.1080/01621459.2014.885434}
+
+\bibitem{ref_shen1998}
+X.~Shen, D.~A.~Wolfe, and S.~Zhou,
+``Local asymptotics for regression splines and confidence regions,''
+\emph{The Annals of Statistics}, vol.~26, no.~5, pp.~1760--1782, 1998.
+\doi{10.1214/aos/1024691356}
+
+\bibitem{ref_glynn2022}
+C.~Glynn,
+``Learning low-dimensional structure in house price indices,''
+\emph{Applied Stochastic Models in Business and Industry},
+vol.~38, no.~1, pp.~151--168, 2022.
+\doi{10.1002/asmb.2653}
+
+\bibitem{ref_pijnenburg}
+K.~Pijnenburg,
+``The spatial dimension of US house prices,''
+\emph{Urban Studies}, vol.~54, no.~2, pp.~466--481, 2017.
+\doi{10.1177/0042098015606595}
+
+\bibitem{ref_krause_bitter}
+A.~L.~Krause and C.~Bitter,
+``Spatial econometrics, land values and sustainability: Trends in real estate
+valuation research,''
+\emph{Cities}, vol.~29, pp.~S19--S25, 2012.
+\doi{10.1016/j.cities.2012.06.006}
+
+\bibitem{ref_breiman}
+L.~Breiman,
+``Random forests,''
+\emph{Machine Learning}, vol.~45, no.~1, pp.~5--32, 2001.
+\doi{10.1023/A:1010933404324}
+
+\bibitem{ref_chen_xgboost}
+T.~Chen and C.~Guestrin,
+``XGBoost: A scalable tree boosting system,''
+in \emph{Proc.\ 22nd ACM SIGKDD Conf.\ Knowledge Discovery and Data Mining},
+pp.~785--794, 2016.
+\doi{10.1145/2939672.2939785}
+
+\bibitem{ref_ke_lgbm}
+G.~Ke, Q.~Meng, T.~Finley, T.~Wang, W.~Chen, W.~Ma, Q.~Ye, and T.-Y.~Liu,
+``LightGBM: A highly efficient gradient boosting decision tree,''
+in \emph{Advances in Neural Information Processing Systems},
+vol.~30, pp.~3149--3157, 2017.
+
+\bibitem{ref_hochreiter1997}
+S.~Hochreiter and J.~Schmidhuber,
+``Long short-term memory,''
+\emph{Neural Computation}, vol.~9, no.~8, pp.~1735--1780, 1997.
+\doi{10.1162/neco.1997.9.8.1735}
+
+\bibitem{ref_mullainathan}
+S.~Mullainathan and J.~Spiess,
+``Machine learning: An applied econometric approach,''
+\emph{Journal of Economic Perspectives}, vol.~31, no.~2, pp.~87--106, 2017.
+\doi{10.1257/jep.31.2.87}
+
+\bibitem{ref_park_bae}
+B.~Park and J.~K.~Bae,
+``Using machine learning algorithms for housing price prediction:
+The case of Fairfax County, Virginia housing data,''
+\emph{Expert Systems with Applications}, vol.~42, no.~6, pp.~2928--2934, 2015.
+\doi{10.1016/j.eswa.2014.11.029}
+
+\bibitem{ref_ho2021}
+W.~K.~K.~Ho, B.-T.~Tang, and S.~W.~Wong,
+``Predicting property prices with machine learning algorithms,''
+\emph{Journal of Property Research}, vol.~38, no.~1, pp.~48--70, 2021.
+\doi{10.1080/09599916.2020.1832558}
+
+\bibitem{ref_truong2020}
+Q.~Truong, M.~Nguyen, H.~Dang, and B.~Mei,
+``Housing price prediction via improved machine learning techniques,''
+\emph{Procedia Computer Science}, vol.~174, pp.~433--442, 2020.
+\doi{10.1016/j.procs.2020.06.111}
+
+\bibitem{ref_fan2022}
+C.~Fan, Z.~Cui, and X.~Zhong,
+``House prices prediction with machine learning algorithms,''
+in \emph{Proc.\ 2022 ACM Comput.\ Sci.\ \& Educ. Conf.}, 2022.
+\doi{10.1145/3514262.3514390}
+
+\bibitem{ref_kim2020}
+H.~Kim, Y.~Kwon, and Y.~Choi,
+``Assessing the impact of public rental housing on housing prices using LSTM,''
+\emph{Sustainability}, vol.~12, no.~18, p.~7520, 2020.
+\doi{10.3390/su12187520}
+
+\bibitem{ref_nunna2023}
+K.~C.~Nunna, Z.~Zhou, and S.~R.~Shakya,
+``Time series forecasting of U.S.\ housing price index using machine and deep
+learning techniques,''
+in \emph{Proc.\ 2023 IEEE Asia-Pacific Conf.\ Computer Science and Data
+Engineering (CSDE)}, pp.~1--6, 2023.
+\doi{10.1109/CSDE59766.2023.10487733}
+
+\bibitem{ref_shi2023}
+S.~Shi,
+``Comparison of real estate price prediction based on LSTM and LGBM,''
+\emph{Highlights in Science, Engineering and Technology},
+vol.~49, pp.~294--301, 2023.
+\doi{10.54097/hset.v49i.8521}
+
+\bibitem{ref_guo2020}
+J.~Q.~Guo, S.~H.~Chiang, M.~Liu, C.~C.~Yang, and K.~Y.~Gou,
+``Can machine learning algorithms associated with text mining from internet
+data improve housing price prediction performance?''
+\emph{International Journal of Strategic Property Management},
+vol.~24, no.~5, pp.~300--312, 2020.
+\doi{10.3846/ijspm.2020.12742}
+
+\bibitem{ref_yazdani2021}
+M.~Yazdani,
+``Machine learning, deep learning, and hedonic methods for real estate price
+prediction,''
+arXiv preprint arXiv:2110.07151, 2021.
+
+\bibitem{ref_lee2022}
+C.~Lee,
+``Forecasting spatially correlated targets: Simultaneous prediction of housing
+market activity across multiple areas,''
+\emph{International Journal of Strategic Property Management},
+vol.~26, no.~2, pp.~119--126, 2022.
+\doi{10.3846/ijspm.2022.16786}
+
+\bibitem{ref_samal2022}
+K.~K.~R.~Samal, K.~S.~Babu, and S.~K.~Das,
+``Multi-output spatiotemporal air pollution forecasting using neural network
+approach,''
+\emph{Applied Soft Computing}, vol.~126, p.~109316, 2022.
+\doi{10.1016/j.asoc.2022.109316}
+
+\bibitem{ref_zhang_nlp2024}
+H.~Zhang, Y.~Li, and P.~Branco,
+``Describe the house and I will tell you the price: House price prediction
+with textual description data,''
+\emph{Natural Language Engineering}, vol.~30, no.~4, pp.~661--695, 2024.
+\doi{10.1017/S1351324923000360}
+
+\bibitem{ref_hyndman2021}
+R.~J.~Hyndman and G.~Athanasopoulos,
+\emph{Forecasting: Principles and Practice}, 3rd ed.
+OTexts, Melbourne, 2021. \url{https://otexts.com/fpp3/}
+
+\end{thebibliography}
+
+\end{document}

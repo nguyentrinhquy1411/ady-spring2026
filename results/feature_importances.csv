@@ -1,0 +1,25 @@
+Model,Feature,Importance
+Linear Regression,lag_1,0.006828981780679209
+Linear Regression,lag_2,0.0018780700346556472
+Linear Regression,lag_3,0.00027224690674859073
+Linear Regression,lag_6,0.00041928758344513613
+Linear Regression,lag_12,0.00017514229155256924
+Linear Regression,city_enc,6.899805984716094e-05
+Random Forest,lag_1,0.9581979892596926
+Random Forest,lag_2,0.022908510438096667
+Random Forest,lag_3,0.004487363314671222
+Random Forest,lag_6,0.00638876014970818
+Random Forest,lag_12,0.004266634838036684
+Random Forest,city_enc,0.0037507419997947684
+XGBoost,lag_1,0.741750955581665
+XGBoost,lag_2,0.21398478746414185
+XGBoost,lag_3,0.016552584245800972
+XGBoost,lag_6,0.01474948599934578
+XGBoost,lag_12,0.007155282888561487
+XGBoost,city_enc,0.00580685306340456
+LightGBM,lag_1,2290.0
+LightGBM,lag_2,2441.0
+LightGBM,lag_3,1629.0
+LightGBM,lag_6,1718.0
+LightGBM,lag_12,1845.0
+LightGBM,city_enc,1994.0
