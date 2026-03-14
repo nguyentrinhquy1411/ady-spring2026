@@ -1,0 +1,7 @@
+[Naive Baseline] log_return - MAE: 1.103105 | RMSE: 1.488839 | R2: -36053.929685
+[Ridge Baseline] log_return - MAE: 0.002009 | RMSE: 0.002756 | R2: -36053.929685
+
+[Naive Baseline] Price Space - MAE: $1,554,653.37 | RMSE: $16,024,956.79 | R2: -9509.026457
+[Ridge Baseline] Price Space - MAE: $495.26 | RMSE: $804.76 | R2: 0.999976
+
+--> Ridge model improves Price MAE by $1,554,158.11 (99.97%) over Naive Baseline.
