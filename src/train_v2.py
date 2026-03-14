@@ -1,3 +1,19 @@
+"""
+train_v2.py
+===========
+Unified training and evaluation pipeline for the housing price prediction model.
+
+This script implements:
+1. Leakage Audit: Checks for high correlation between features and target.
+2. Smart Baseline: Zero-growth persistence model (predicts log_return = 0).
+3. Ridge Regression: Linear modeling with L2 regularization and TimeSeriesSplit CV.
+4. LightGBM: Gradient-boosted trees with time-based early stopping.
+5. Dual-Space Evaluation: Metrics reported in both log_return space and absolute Price space ($).
+
+Target: log_return
+Features: lag_1, lag_2, lag_3, lag_6, lag_12, city_enc
+"""
+
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import Ridge
