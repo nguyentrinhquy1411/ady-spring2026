@@ -30,8 +30,8 @@
 % ============================================================
 \begin{document}
 
-\title{Spatiotemporal Housing Price Prediction: Comparing Functional
-Semiparametric Models with Modern Machine Learning Approaches}
+\title{Spatiotemporal Housing Price Prediction Comparing Functional
+Semiparametric and Machine Learning Models}
 
 \titlerunning{Housing Price Prediction: Statistical vs.\ ML}
 
@@ -53,38 +53,18 @@ Semiparametric Models with Modern Machine Learning Approaches}
 
 % ============================================================
 \begin{abstract}
-Accurate forecasting of multi-region residential house prices is a
-central challenge in real-estate economics with implications for
-policy, investment, and urban planning.  This paper extends the
-functional spatiotemporal semiparametric mixed-effects (FST-SM)
-model proposed by Chen and Zheng~\cite{ref_fmem2023} by
-systematically comparing it against four modern machine learning
-(ML) approaches — Linear Regression, Random Forest, XGBoost,
-LightGBM, and a Long Short-Term Memory (LSTM) network — applied to
-the Zillow Home Value Index (ZHVI) across 894 U.S.\ metropolitan
-statistical areas from January 2001 to January 2026, comprising
-268\,200 region-month observations.
-We target monthly log-returns (a stationary, scale-free
-transformation of ZHVI) and engineer autoregressive lag features
-(lag-1 through lag-12) together with a city-level target encoding.
-A temporal 80/20 train/test split ensures strict non-leakage
-evaluation on future data.
-Experimental results show that Linear Regression achieves the
-lowest log-return RMSE ($0.00276$) and highest R$^2$ ($0.876$),
-outperforming Random Forest, XGBoost, and LightGBM, while LSTM
-performs worst (RMSE $0.00515$, R$^2$ $0.569$) despite its
-temporal modelling capacity.
-Feature importance analysis reveals that the one-month lag dominates
-all tree-based models, echoing the FST-SM finding that lag-1
-carries the strongest fixed effect ($\hat{\beta}_1 = 2.39$).
-Our results suggest that the dominant temporal structure of ZHVI
-is captured effectively by linear autoregression, and that the
-additional inductive bias of the FST-SM's functional principal
-component decomposition and CAR spatial structure provide
-competitive advantages particularly for local community-level
-patterns, whereas scalable ML pipelines are more practical for
-national-scale forecasting tasks.
-All code and processed data are released to support reproducibility.
+This paper systematically compares the functional spatiotemporal 
+semiparametric mixed-effects (FST-SM) model~\cite{ref_fmem2023} 
+against five machine learning (ML) approaches for forecasting multi-region 
+house prices on the Zillow Home Value Index (ZHVI). Analyzing 894 U.S.\ 
+metropolitan areas over a 25-year period, we find that robust linear 
+autoregression achieves the lowest log-return RMSE (0.00276) and highest 
+R$^2$ (0.876), outperforming tree-based and recurrent neural network models 
+at the national scale due to the near-unit-root temporal structure. Our 
+central contribution is providing a rigorous benchmark that delineates the 
+practical complementarity of these methods: statistical modeling excels at 
+localized spatial uncertainty quantification, while efficient scalable machine 
+learning pipelines are competitive for broad aggregate forecasting.
 
 \keywords{Housing price prediction \and Zillow ZHVI \and
           Functional mixed-effects model \and Machine learning \and
@@ -136,119 +116,15 @@ Furthermore, the original study targets a single city
 reported coefficient of determination (R$^2$) metric, which is
 standard in the ML literature for regression evaluation.
 
-This paper fills these gaps with the following contributions:
-\begin{enumerate}
-  \item We extend the ZHVI prediction benchmark to 894 U.S.\ metro
-        areas (the full national MSA dataset), investigating
-        generalisability across diverse markets.
-  \item We implement five ML models — Linear Regression, Random
-        Forest, XGBoost, LightGBM, and LSTM — with consistent
-        feature engineering and strict temporal data splitting,
-        providing the first head-to-head comparison against the
-        FST-SM framework on ZHVI data.
-  \item We report four evaluation metrics (RMSE, MAE, MAPE, R$^2$)
-        in both log-return and USD price domains and provide
-        detailed feature importance analysis.
-  \item We interpret our findings in the context of real-estate
-        market dynamics, offering practical guidance on model
-        selection for national-scale housing price forecasting.
-\end{enumerate}
+This paper fills these gaps by establishing several main contributions. First, we extend the ZHVI prediction benchmark to 894 U.S.\ metro areas to investigate generalisability across diverse markets. Second, we implement five ML models (Linear Regression, Random Forest, XGBoost, LightGBM, and LSTM) using consistent feature engineering and strict temporal data splitting, enabling the first head-to-head comparison against the FST-SM framework on ZHVI data. Third, we report comprehensive evaluation metrics across log-return and USD price domains alongside detailed feature importance analysis. Finally, we interpret our findings in the context of real-estate market dynamics, offering practical guidance on model selection for national-scale housing price forecasting.
 
 % ============================================================
 \section{Related Work}
 \label{sec:related}
 
-\subsection{Statistical and Functional Models}
+Statistical approaches to real-estate valuation have rapidly evolved from foundational hedonic regression estimating structural attributes~\cite{ref_rosen} to highly advanced models adept at capturing profound spatial and temporal dependencies~\cite{ref_anselin,ref_pijnenburg}. Furthermore, functional data analysis portrays price histories continuously~\cite{ref_ramsay_2002}, with notable innovations marrying functional principal component analysis and conditional autoregressive structures to properly accommodate large, spatially correlated datasets~\cite{ref_zhang_fcar,ref_li_guan2014}. The functional spatiotemporal semiparametric mixed-effects (FST-SM) model~\cite{ref_fmem2023} has specifically integrated many of these threads to successfully reflect detailed local dynamics. Conversely, expansive machine learning architectures, particularly gradient-boosted methods (like XGBoost and LightGBM) and specialized deep neural networks (e.g., LSTMs), increasingly dominate predictive benchmarks due to their capacity to absorb highly nonlinear feature sets across massive data pools efficiently~\cite{ref_ho2021,ref_fan2022,ref_shi2023}. Thus, robust multi-region spatiotemporal tasks are beginning to leverage key successes drawn from both analytical frameworks~\cite{ref_lee2022,ref_samal2022}.
 
-Hedonic pricing models, which regress house prices on structural,
-locational, and neighbourhood attributes, have been the workhorse
-of real-estate valuation since Rosen~\cite{ref_rosen}.
-Extensions incorporating spatial autocorrelation via
-spatial-lag and spatial-error terms~\cite{ref_anselin} became
-standard after empirical evidence of strong geographic
-clustering~\cite{ref_pijnenburg}.  Krause and
-Bitter~\cite{ref_krause_bitter} document that ignoring spatial
-dependence leads to biased coefficient estimates in value models.
-
-Functional data analysis offers an alternative by treating the
-price history of each region as a curve rather than a sequence of
-scalars.  Ramsay and Silverman~\cite{ref_ramsay_2002} established
-the methodological foundations, later extended by Li and
-Guan~\cite{ref_li_guan2014} to spatiotemporal functional processes
-with Matérn spatial correlation.  Zhang et al.~\cite{ref_zhang_fcar}
-proposed functional CAR models for large spatially correlated
-functional datasets, directly motivating the FST-SM.
-Glynn~\cite{ref_glynn2022} applied low-dimensional functional
-structure learning to house price indices, demonstrating that a
-small number of functional principal components captures most
-cross-sectional variation.  Zhang and Li~\cite{ref_zhang_li2022}
-developed unified FPCA for sparse and dense functional data under
-spatial dependency, directly extending the toolkit used by
-Chen and Zheng~\cite{ref_fmem2023}.
-
-\subsection{Machine Learning for Housing Price Prediction}
-
-The intersection of ML and real-estate valuation has grown rapidly
-since 2018.  Park and Bae~\cite{ref_park_bae} showed that ANN
-outperforms OLS for price prediction in Virginia; Ho
-et al.~\cite{ref_ho2021} found that XGBoost yields the
-highest accuracy among eight algorithms on Hong Kong property
-data.  Truong et al.~\cite{ref_truong2020} systematically
-compared Random Forest, AdaBoost, XGBoost, and deep neural
-networks on Vietnamese residential data, finding gradient-boosted
-trees most accurate.  Fan et al.~\cite{ref_fan2022} demonstrated
-that LightGBM outperforms XGBoost on large-scale Chinese property
-datasets due to its leaf-wise growth strategy and histogram-based
-splitting, achieving a 3--5\% RMSE reduction.
-
-Critical surveys of the field include Mullainathan and
-Spiess~\cite{ref_mullainathan}, who argue for ML adoption in
-applied econometrics, and Yazdani~\cite{ref_yazdani2021}, who
-benchmarks hedonic, ML, and deep learning methods on real
-estate data.  Guo et al.~\cite{ref_guo2020} combined text mining
-from internet data with ML to improve ZHVI predictions, demonstrating
-that unstructured data can supplement traditional features.
-
-\subsection{Deep Learning and Temporal Models}
-
-LSTM networks~\cite{ref_hochreiter1997} have been applied to
-housing price time series prediction since their general adoption.
-Kim et al.~\cite{ref_kim2020} used LSTM to assess the impact of
-public rental housing on nearby prices, achieving R$^2 = 0.94$
-on Korean LSTM-based predictions.
-Nunna et al.~\cite{ref_nunna2023} compared LSTM against ARIMA and
-Gradient Boosting for U.S.\ Housing Price Index forecasting using
-Fed data, finding deep learning competitive at longer horizons but
-inferior for short one-step-ahead tasks.
-Shi~\cite{ref_shi2023} compared LSTM and LightGBM directly for
-real-estate price prediction, finding LSTM better for pure
-time-series inputs (R$^2 = 0.91$) while LightGBM excels with
-multi-factor tabular inputs (R$^2 = 0.53$).
-Zhang et al.~\cite{ref_zhang_nlp2024} explored natural-language
-descriptions as additional features, further expanding the ML
-toolkit for automated valuation models.
-
-\subsection{Spatiotemporal Forecasting}
-
-Lee~\cite{ref_lee2022} proposed simultaneous multi-region ZHVI
-prediction by exploiting spatial correlations between metro areas,
-reporting improved accuracy over independent models.
-Samal et al.~\cite{ref_samal2022} applied multi-output neural
-networks for spatiotemporal air-quality forecasting — a paradigm
-directly analogous to multi-region house-price prediction.
-Pijnenburg~\cite{ref_pijnenburg} quantified the spatial dimension
-of U.S.\ house prices, finding that spatial spillovers account for
-up to 30\% of the explained variance in metro-level growth rates.
-
-\subsection{Positioning of the Present Work}
-
-While the FST-SM model of Chen and Zheng~\cite{ref_fmem2023}
-establishes the state of the art for functional spatiotemporal
-modelling, it has not been benchmarked against the gradient-boosting
-and LSTM models that dominate applied ML forecasting.
-Our paper directly addresses this gap by applying both families
-of models to the same data source (ZHVI) under identical evaluation
-conditions, enabling a rigorous apples-to-apples comparison.
+Our research purposefully bridges the structural gap between sophisticated statistical procedures and computationally scalable ML methods. Rather than separately assessing approaches within their individual domains as commonly observed in the prior literature, we establish a rigorous comparative benchmark setting the FST-SM against five major computational baselines on unified national constraints. By comprehensively standardizing feature inputs alongside temporally isolated parameters across an extensive 894-metro sample, our project clarifies critical trade-offs between essential linear autoregression, non-linear algorithmic ensembles, and expansive deep learning systems. Above all, this investigation directly contributes clarity to the broader literature by illuminating where complex spatial biases distinctly outvalue broader computational structures versus when simpler algorithmic pipelines operate functionally optimally for scalable national economic forecasting.
 
 % ============================================================
 \section{Data Description}
@@ -272,7 +148,7 @@ training-period median (\$204{,}620) by 78.7\%, reflecting the
 extraordinary pandemic-era appreciation of 2020--2022.
 
 \begin{table}[t]
-\caption{Descriptive statistics of the ZHVI dataset.}
+\caption{}
 \label{tab:data_summary}
 \centering
 \begin{tabular}{lrrr}
@@ -499,7 +375,7 @@ LightGBM (4.6.0), and PyTorch (2.10.0).  Seeds are fixed at 42
 for reproducibility.  Training times reflect single-CPU execution.
 
 \begin{table}[t]
-\caption{Model hyperparameter settings.}
+\caption{}
 \label{tab:hyperparams}
 \centering
 \begin{tabular}{llr}
@@ -517,17 +393,7 @@ LSTM              & 2 layers, hidden=64, window=12, Adam, patience=8 & 13 min\\
 
 \subsection{Data Split}
 
-A global temporal cutoff at the 80th percentile of all dates
-(November 2020) partitions data into:
-\begin{itemize}
-  \item \textbf{Training set}: 211{,}878 observations
-        (Jan 2001 -- Oct 2020, 894 metros)
-  \item \textbf{Test set}: 56{,}322 observations
-        (Nov 2020 -- Jan 2026, 894 metros)
-\end{itemize}
-All preprocessing statistics (mean ZHVI per city for encoding,
-feature scaling parameters) are computed exclusively on the
-training set.
+A global temporal cutoff at the 80th percentile of all dates (November 2020) partitions the data into a training set comprising 211{,}878 separate observations spanning from January 2001 to October 2020 alongside a withheld evaluation test set storing 56{,}322 final entries extending through early 2026. All preprocessing statistics, specifically measuring mean categorical parameters applied toward encoding scaling transformations, remain exclusively computed leveraging solely fundamental training elements prior.
 
 % ============================================================
 \section{Results}
@@ -558,9 +424,7 @@ prediction task than one-step-ahead log-return with access to
 the prior price.
 
 \begin{table}[t]
-\caption{Model comparison on ZHVI test set (894 metro areas,
-Nov.~2020--Jan.~2026). Bold = best per column.
-$\uparrow$~higher is better; $\downarrow$~lower is better.}
+\caption{}
 \label{tab:results}
 \centering
 \resizebox{\linewidth}{!}{%
@@ -698,35 +562,7 @@ model with cross-region attention could potentially close this gap.
 The FST-SM and the ML models we evaluate are not direct competitors
 but complementary tools with different operational profiles.
 
-The FST-SM excels at:
-\begin{itemize}
-  \item \textbf{Spatial borrowing of strength}: the CAR prior allows
-        data-sparse communities to borrow information from
-        geographic neighbours, highly valuable for sub-city analysis.
-  \item \textbf{Uncertainty quantification}: MCMC posterior
-        distributions yield credible intervals on both predictions
-        and fixed effects, essential for risk communication.
-  \item \textbf{Interpretability}: the eigenfunction decomposition
-        explicates \emph{which spatiotemporal patterns} drive
-        price change, enabling substantive economic commentary
-        (e.g., detecting the pandemic-driven demand shift from
-        transit-accessible communities to suburbs).
-\end{itemize}
-
-ML models offer complementary strengths:
-\begin{itemize}
-  \item \textbf{National scalability}: LightGBM trains in $\sim$1
-        second on 211{,}878 observations; MCMC for FST-SM scales
-        cubically in the number of communities.
-  \item \textbf{Feature agnosticism}: tabular features such as
-        mortgage rates, unemployment, or permit counts can be
-        incorporated into an ML model without re-deriving the
-        model structure.
-  \item \textbf{Ease of deployment}: scikit-learn / XGBoost
-        pipelines require minimal statistical expertise to
-        deploy and maintain in production automated valuation
-        systems.
-\end{itemize}
+The FST-SM excels at spatial borrowing of strength, as the CAR prior allows data-sparse communities to borrow information from geographic neighbours, which remains highly valuable for localized sub-city analysis. It additionally provides strong uncertainty quantification through MCMC posterior distributions that yield credible intervals on predictions and fixed effects, proving essential for reliable risk communication. Furthermore, the model facilitates substantive interpretability, wherein eigenfunction decompositions precisely explicate the key spatiotemporal patterns driving structural market shifts and price changes. ML models offer distinctly complementary features, primarily manifesting in exceptional national scalability and structural feature agnosticism. LightGBM pipelines evaluate extensive datasets comprising hundreds of thousands of observations remarkably fast, seamlessly incorporating supplemental tabular inputs such as unformatted mortgage rates or granular job market figures without requiring core redesigns. Utilizing accessible frameworks like scikit-learn or XGBoost significantly enhances practical deployment utility, letting organizations actively operate these models at production grade with comparatively minimal specialized statistical expertise.
 
 \subsection{Implications for Practice}
 
@@ -744,57 +580,13 @@ choices, and ranks third overall.
 
 \subsection{Limitations and Future Work}
 
-Our study has three main limitations:
-\begin{enumerate}
-  \item \textbf{Feature scope}: we use only autoregressive
-        log-return lags.  Incorporating macroeconomic drivers
-        (30-year mortgage rates, Fed funds rate, unemployment,
-        new housing permits) would likely improve all models.
-  \item \textbf{LSTM architecture}: the global LSTM is a
-        conservative baseline.  Region-specific models, temporal
-        transformers, or graph neural networks with spatial
-        adjacency could better match LSTM's theoretical potential.
-  \item \textbf{Horizon}: we evaluate one-step-ahead (1-month)
-        forecasting.  Extension to 3-, 6-, and 12-month horizons
-        would test whether ML advantages emerge at longer ranges.
-\end{enumerate}
+Our empirical study highlights several notable limitations that guide subsequent developments. Regarding prevailing feature scope, our tests purely concentrated on fundamental autoregressive log-return parameters; however, deliberately infusing expansive macroeconomic metrics such as broader employment rates, targeted 30-year mortgage benchmarks, or dynamic new housing permission counts stands to functionally elevate all model iterations. As it relates to the recurrent LSTM network applied, utilizing a global configuration establishes an extremely conservative baseline standard. Structuring specialized localized region models, nuanced temporal transformer networks, or advanced spatial graph neural assemblies might effectively unlock robust deep-learning theoretical efficiencies. Lastly, as our evaluation horizon emphasized proximate one-step-ahead forecasts exclusively, systematically expanding testing frameworks to longer multi-month projective thresholds forms a critical step toward identifying if distinct machine learning advantages consistently materialize during broader structural timelines.
 
 % ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-This study replicated and extended the FST-SM framework of
-Chen and Zheng~\cite{ref_fmem2023} to 894 U.S.\ metropolitan
-statistical areas, providing the first systematic benchmark of
-modern machine learning models against functional spatiotemporal
-statistical methods on ZHVI data.
-
-Our core findings are:
-\begin{enumerate}
-  \item \textbf{Linear Regression is competitive}:
-        with RMSE \$804.96, MAE \$495.40, and R$^2 = 0.876$,
-        Ridge regression on six lag features outperforms Random
-        Forest, XGBoost, LightGBM, and LSTM.
-  \item \textbf{ZHVI is near-linearly predictable at one month}:
-        the dominance of \texttt{lag\_1} in all models, and Linear
-        Regression's superiority, confirm that monthly ZHVI
-        log-returns exhibit a near-unit-root structure well
-        captured by linear autoregression.
-  \item \textbf{LSTM underperforms classical models} for national
-        multi-region tabular data, consistent with Shi~\cite{ref_shi2023}.
-        A region-specific or attention-based architecture is
-        recommended as future work.
-  \item \textbf{FST-SM and ML models are complementary}: the
-        FST-SM is superior for local spatial analysis with
-        uncertainty quantification; ML models scale to national
-        datasets and accommodate arbitrary tabular features.
-\end{enumerate}
-
-These findings offer practical guidance to practitioners and
-researchers building automated valuation models: linear
-autoregression provides a strong, fast baseline, and the
-additional complexity of gradient-boosted trees yields only
-marginal gains at the national scale.
+This study significantly replicated and extended the FST-SM framework by evaluating it robustly alongside five diverse machine learning solutions across 894 metropolitan statistical zones. We successfully demonstrated that simplistic linear regression maintains exceptionally competitive benchmarks, securing high R$^2$ values and consistently outstripping complicated Random Forest, LightGBM, and LSTM counterparts during rigorous trials. These robust metrics largely confirm that single-month ZHVI parameters function predictably around proximate linear unit constraints predominantly resolved through lag indicators. Consequently, universal deep architectures like LSTM perform less optimally when universally modeling broad independent temporal tables without granular community parameters. Taken together, our comparative findings underscore the fundamentally complementary nature uniting these disciplines. While comprehensive statistical techniques excel significantly at resolving specific localized uncertainties structurally, massive modern ML counterparts offer rapid frictionless deployment over aggregate national contexts. Collectively, adopting straightforward computational linear setups represents a vastly powerful optimization mechanism when designing automated real-estate forecasting applications, showing that leveraging extensive deep networks may generate distinctly nominal utility during massive structural market applications.
 
 \begin{credits}
 \subsubsection{\ackname}
@@ -822,7 +614,6 @@ vol.~29, no.~2, pp.~102--113, 2025.
 \bibitem{ref_zillow}
 Zillow Research,
 ``Zillow Home Value Index (ZHVI) Methodology,''
-\url{https://www.zillow.com/research/zhvi-methodology-2019-revised-26228/},
 accessed Mar.\ 2026.
 
 \bibitem{ref_rosen}
@@ -1008,7 +799,7 @@ with textual description data,''
 \bibitem{ref_hyndman2021}
 R.~J.~Hyndman and G.~Athanasopoulos,
 \emph{Forecasting: Principles and Practice}, 3rd ed.
-OTexts, Melbourne, 2021. \url{https://otexts.com/fpp3/}
+OTexts, Melbourne, 2021.
 
 \end{thebibliography}
 
