@@ -1,0 +1,107 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Project Report: Predictive Modeling of Housing Price Dynamics}
+\author{Course: ADY-2026 \and FPT University}
+\date{March 19, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report details the methodology and results of predictive modeling applied to the Zillow Home Value Index (ZHVI). By shifting the prediction target from absolute prices to stationary log-returns, we demonstrate that linear models such as Ridge Regression can achieve high precision, significantly outperforming zero-growth baselines and complex non-linear models for short-term forecasting.
+\end{abstract}
+
+\section{Introduction \& Overview of Data Science Context}
+\label{sec:intro}
+The global real estate market is a critical pillar of economic infrastructure. For individual homeowners, property often represents their most significant financial asset. For institutions, real estate serves as a hedge against inflation and a cornerstone for long-term investment portfolios. However, the inherent complexity of housing markets---driven by interest rates, regional supply-demand imbalances, and psychological sentiment---makes price forecasting a notoriously difficult task.
+
+Traditional house price models often predict absolute price levels, which frequently leads to non-stationarity issues and high autocorrelation. This project addresses these challenges by shifting the modeling objective from absolute prices to stationary 'log-returns' ($\Delta \log \text{Price}$). By predicting the rate of growth rather than the price itself, our methodology ensures that the models remain robust across cities with vastly different price scales (e.g., San Francisco vs. Detroit).
+
+Our primary objective is to evaluate whether linear models like Ridge Regression can effectively capture market momentum signals when benchmarked against non-linear architectures like LightGBM and simple zero-growth persistence models. The project utilizes the Zillow Home Value Index (ZHVI), which provides a stable, seasonally adjusted view of the US housing market.
+
+\section{Methodology}
+\label{sec:methodology}
+The development pipeline is designed for scalability and reproducibility, leveraging modern data engineering practices to ensure a leakage-proof evaluation.
+
+\subsection{Data Pipeline and Workflow}
+The workflow consists of five distinct phases:
+\begin{enumerate}
+    \item \textbf{Ingestion:} Raw wide-format CSV files containing monthly ZHVI data are melted into a long-format structure [\textit{RegionID}, \textit{Date}, \textit{Price}]. This transformation enables per-region time-series analysis.
+    \item \textbf{Preprocessing:} We apply time-aware linear interpolation to fill gaps in regions with sparse reporting. The target variable is computed as:
+    \begin{equation}
+        \text{log\_return}_t = \log\left(\frac{\text{Price}_t}{\text{Price}_{t-1}}\right)
+    \end{equation}
+    This ensures the model predicts changes in market velocity.
+    \item \textbf{Feature Engineering:} Momentum features are captured using multi-interval lags (1, 2, 3, 6, and 12 months). This captures both short-term trend following and annual seasonality.
+    \item \textbf{City Target Encoding:} To incorporate regional market identity, we encode each \textit{RegionID} as its average historical log-return computed on the training set. This serves as a structural growth baseline for each metro area.
+    \item \textbf{Normalization:} Features are standardized using \texttt{StandardScaler} fitted exclusively on the training corpus to prevent data leakage.
+\end{enumerate}
+
+\subsection{Model Selection and Hyperparameters}
+We compare three distinct modeling philosophies:
+\begin{itemize}
+    \item \textbf{Zero Growth Baseline:} A simple `persistence' assumption that tomorrow's price change is zero ($\text{log\_return} = 0$). This provides a sanity check for model performance.
+    \item \textbf{Ridge Regression:} A linear model with $L_2$ regularization. We use \texttt{TimeSeriesSplit} for cross-validation to tune the $\alpha$ parameter, ensuring the model generalizes well to future time periods.
+    \item \textbf{LightGBM Regressor:} A gradient-boosted tree model that can capture non-linear interactions between lags. We utilize a fixed 15\% time-based validation window for early stopping to prevent overfitting.
+\end{itemize}
+
+\subsection{Tools and Libraries}
+The implementation is built on the Python 3.12 ecosystem, utilizing:
+\begin{itemize}
+    \item \texttt{Pandas} \& \texttt{NumPy} for data manipulation.
+    \item \texttt{Scikit-Learn} for Ridge modeling, cross-validation, and scaling.
+    \item \texttt{LightGBM} for non-linear regression analysis.
+    \item \texttt{Matplotlib} \& \texttt{Seaborn} for visualizing error residuals and feature importance.
+\end{itemize}
+
+\section{Results}
+\label{sec:results}
+Overall performance was outstanding, with all trained models significantly outperforming the zero-growth baseline. The results are summarized in Table~\ref{tab:results}, comparing predictions in both the logarithmic target space and the original USD currency space.
+
+\begin{table}[ht]
+    \centering
+    \caption{Model Performance Comparison}
+    \label{tab:results}
+    \begin{tabular}{lccc}
+        \hline
+        \textbf{Model Architecture} & \textbf{log\_return MAE} & \textbf{Price MAE (\$)} & \textbf{Price R$^2$} \\
+        \hline
+        Smart Baseline (Zero Growth) & 0.006913 & 1,795.06 & 0.999668 \\
+        Ridge Regression ($L_2$) & \textbf{0.002009} & \textbf{495.26} & \textbf{0.999976} \\
+        LightGBM (Gradient Boosted) & 0.002166 & 543.87 & 0.999967 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Analysis of Error Metrics}
+\begin{itemize}
+    \item \textbf{MAE (\$):} Ridge Regression achieves an incredible \$495 average error across all regions. This represents a $>$70\% gain in precision compared to the zero-growth assumption (\$1,795 MAE).
+    \item \textbf{R$^2$ Correlation:} The $R^2$ values exceeding 0.999 reflect the model's ability to track the underlying structural trend of house prices. While $R^2$ on price levels is typically high due to momentum, the improvement in log-return MAE proves that the model is effectively predicting fluctuations in market velocity.
+\end{itemize}
+
+\subsection{Feature Importance Analysis}
+Feature importance logs reveal that the 1-month lag (\texttt{lag\_1}) is the most dominant predictor, followed by \texttt{lag\_2}. This confirms that the US housing market is highly momentum-driven. The \texttt{city\_enc} feature also plays a significant role, accounting for the baseline growth rate differences between high-growth markets like Phoenix and stable markets like Cleveland.
+
+\section{Discussion}
+\label{sec:discussion}
+\subsection{Linear vs. Non-Linear Dominance}
+A surprising finding was that Ridge Regression slightly outperformed LightGBM. This suggests that the relationship between previous monthly returns and short-term future returns is predominantly linear. Real estate market friction---high transaction costs and long closing times---acts as a smoothing filter, creating stable trends that linear models are highly adept at capturing without the risk of overfitting inherent in deep trees.
+
+\subsection{Real-World Application and Insights}
+For stakeholders (homebuyers and investors), this model provides a highly reliable momentum signal. An average error of $\sim$\$500 on assets worth several hundred thousand dollars means the model can identify region-specific market cooling or acceleration months before they become obvious in raw price charts.
+
+\subsection{Limitations and Edge Cases}
+The primary limitation is the model's reliance on backward-looking momentum. While excellent for forecasting continuous trends, the model cannot predict external economic shocks (e.g., pandemic lockdowns, sudden mortgage rate spikes) that have not yet appeared in the transactional data. Future iterations could incorporate exogenous variables such as the 30-year fixed mortgage rate or regional unemployment data.
+
+\vspace*{1em}
+\noindent
+\textit{Note: \textbf{Section "AI Usage \& Audit"} has been documented in a separate file (\texttt{AI\_Usage\_Audit.md}) generated in the project root, clearly describing how AI tools were used during the project and how their outputs were reviewed and validated.}
+
+\end{document}
