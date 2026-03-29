@@ -112,6 +112,100 @@ SELECT
 | CO          |         0.003929 |              0.0472 |            17 |
 | NJ          |         0.003824 |              0.0459 |             4 |
 
+### Xu hướng giá nhà theo năm tại 3 thị trường đại diện (cao / trung / thấp)
+
+```sql
+SELECT
+        RegionName,
+        YEAR(date)               AS year,
+        ROUND(AVG(price), 2)     AS avg_price
+    FROM processed_data
+    WHERE RegionName IN ('San Jose, CA', 'Greensboro, NC', 'Clarksdale, MS')
+    GROUP BY RegionName, YEAR(date)
+    ORDER BY RegionName, year;
+```
+
+| RegionName     |   year |        avg_price |
+|:---------------|-------:|-----------------:|
+| Clarksdale, MS |   2001 |  52413.3         |
+| Clarksdale, MS |   2002 |  52413.3         |
+| Clarksdale, MS |   2003 |  52413.3         |
+| Clarksdale, MS |   2004 |  52413.3         |
+| Clarksdale, MS |   2005 |  52413.3         |
+| Clarksdale, MS |   2006 |  52413.3         |
+| Clarksdale, MS |   2007 |  52413.3         |
+| Clarksdale, MS |   2008 |  52413.3         |
+| Clarksdale, MS |   2009 |  52413.3         |
+| Clarksdale, MS |   2010 |  52413.3         |
+| Clarksdale, MS |   2011 |  52413.3         |
+| Clarksdale, MS |   2012 |  52413.3         |
+| Clarksdale, MS |   2013 |  52413.3         |
+| Clarksdale, MS |   2014 |  52413.3         |
+| Clarksdale, MS |   2015 |  52413.3         |
+| Clarksdale, MS |   2016 |  51275           |
+| Clarksdale, MS |   2017 |  49473.1         |
+| Clarksdale, MS |   2018 |  50703.5         |
+| Clarksdale, MS |   2019 |  54628.6         |
+| Clarksdale, MS |   2020 |  60373.3         |
+| Clarksdale, MS |   2021 |  76232.1         |
+| Clarksdale, MS |   2022 |  73142.5         |
+| Clarksdale, MS |   2023 |  60723.2         |
+| Clarksdale, MS |   2024 |  52881.4         |
+| Clarksdale, MS |   2025 |  50474.5         |
+| Clarksdale, MS |   2026 |  47381.4         |
+| Greensboro, NC |   2001 | 114130           |
+| Greensboro, NC |   2002 | 116679           |
+| Greensboro, NC |   2003 | 118801           |
+| Greensboro, NC |   2004 | 121551           |
+| Greensboro, NC |   2005 | 125437           |
+| Greensboro, NC |   2006 | 130305           |
+| Greensboro, NC |   2007 | 133711           |
+| Greensboro, NC |   2008 | 133798           |
+| Greensboro, NC |   2009 | 129387           |
+| Greensboro, NC |   2010 | 124382           |
+| Greensboro, NC |   2011 | 119160           |
+| Greensboro, NC |   2012 | 117748           |
+| Greensboro, NC |   2013 | 120521           |
+| Greensboro, NC |   2014 | 124439           |
+| Greensboro, NC |   2015 | 127848           |
+| Greensboro, NC |   2016 | 133391           |
+| Greensboro, NC |   2017 | 140550           |
+| Greensboro, NC |   2018 | 149906           |
+| Greensboro, NC |   2019 | 161280           |
+| Greensboro, NC |   2020 | 174621           |
+| Greensboro, NC |   2021 | 201133           |
+| Greensboro, NC |   2022 | 228758           |
+| Greensboro, NC |   2023 | 240394           |
+| Greensboro, NC |   2024 | 251369           |
+| Greensboro, NC |   2025 | 254130           |
+| Greensboro, NC |   2026 | 255818           |
+| San Jose, CA   |   2001 | 474328           |
+| San Jose, CA   |   2002 | 469914           |
+| San Jose, CA   |   2003 | 482058           |
+| San Jose, CA   |   2004 | 527764           |
+| San Jose, CA   |   2005 | 626131           |
+| San Jose, CA   |   2006 | 669806           |
+| San Jose, CA   |   2007 | 670314           |
+| San Jose, CA   |   2008 | 594597           |
+| San Jose, CA   |   2009 | 498822           |
+| San Jose, CA   |   2010 | 505166           |
+| San Jose, CA   |   2011 | 476419           |
+| San Jose, CA   |   2012 | 505768           |
+| San Jose, CA   |   2013 | 622712           |
+| San Jose, CA   |   2014 | 707211           |
+| San Jose, CA   |   2015 | 808925           |
+| San Jose, CA   |   2016 | 867382           |
+| San Jose, CA   |   2017 | 895127           |
+| San Jose, CA   |   2018 |      1.10307e+06 |
+| San Jose, CA   |   2019 |      1.1058e+06  |
+| San Jose, CA   |   2020 |      1.12179e+06 |
+| San Jose, CA   |   2021 |      1.27631e+06 |
+| San Jose, CA   |   2022 |      1.45933e+06 |
+| San Jose, CA   |   2023 |      1.39494e+06 |
+| San Jose, CA   |   2024 |      1.52575e+06 |
+| San Jose, CA   |   2025 |      1.55337e+06 |
+| San Jose, CA   |   2026 |      1.56857e+06 |
+
 ## Phân tích log_return (target variable)
 
 ### Phân phối log_return theo năm
