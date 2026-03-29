@@ -7,7 +7,7 @@ Throughout the development of the Housing Price Predictor project, AI tools (spe
 The following areas benefited from AI collaboration:
 
 - **Architectural Design**: The AI proposed the transition from raw price levels to stationary `log-returns`, explaining the statistical advantages (stationarity, additive properties) for time-series modeling.
-- **Leakage Prevention**: AI was used to audit the `train_v2.py` script to ensure that `StandardScaler` and `CityEncoding` were fitted exclusively on the training set, avoiding look-ahead bias.
+- **Leakage Prevention**: AI was used to audit the `preprocess.py` script to ensure that `StandardScaler` and `CityEncoding` were fitted exclusively on the training set, avoiding look-ahead bias.
 - **Model Refinement**: Suggestions for hyperparameter tuning (GridSearchCV) and cross-validation strategies (TimeSeriesSplit) were provided by the AI to better handle sequential data.
 - **Evaluation Framework**: The AI helped design the "Dual-Space" evaluation logic, enabling the reporting of metrics in both logarithmic units and real-world USD figures.
 

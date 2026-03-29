@@ -1,10 +1,87 @@
-# Python-generated files
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-*.egg-info
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Virtual environments
-.venv
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Data files (raw, processed, databases)
+data/
+*.csv
+*.db
+*.sqlite3
+
+# LaTeX build files
+*.aux
+*.bbl
+*.blg
+*.brf
+*.bcf
+*.fls
+*.fdb_latexmk
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.log
+*.nav
+*.out
+# *.pdf
+*.snm
+*.synctex.gz
+*.toc
+*.run.xml
+*.tex
+
+# IDE and Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Antigravity/Agent directories
+.agents/
+.agent/
+_agents/
+_agent/
+.gemini/
+
+# Exploratory / scratch files (not tracked)
+_scratch/
+
+# Visualizations exclusions
+visualizations/animations/
+visualizations/animations_3d/
