@@ -182,6 +182,47 @@ ORDER BY year;
     """,
         ),
     },
+    
+    # ── #4 SQL Analysis — Segmentation & Extremes ─────────────────────────────
+    "Phân khúc thị trường & Điểm cực trị": {
+        "market_segmentation": (
+            "Phân khúc thị trường theo Tier giá (High/Mid/Low)",
+            """
+    SELECT
+        CASE
+            WHEN price > 500000 THEN 'High (>500K)'
+            WHEN price > 200000 THEN 'Mid (200K-500K)'
+            ELSE 'Low (<200K)'
+        END AS tier,
+        COUNT(*)                        AS observations,
+        COUNT(DISTINCT RegionName)      AS num_regions,
+        ROUND(AVG(price), 2)            AS avg_price,
+        ROUND(MEDIAN(price), 2)         AS median_price,
+        ROUND(AVG(log_return), 6)       AS avg_return,
+        ROUND(STDDEV(log_return), 6)    AS volatility
+    FROM processed_data
+    GROUP BY tier
+    ORDER BY avg_price DESC;
+    """,
+        ),
+        "highest_lowest_regions": (
+            "Thống kê các thị trường theo mức giá (Từ cao xuống thấp)",
+            """
+    SELECT
+        RegionName,
+        StateName,
+        ROUND(AVG(price), 2)          AS avg_price,
+        ROUND(MEDIAN(price), 2)       AS median_price,
+        ROUND(MIN(price), 2)          AS min_price,
+        ROUND(MAX(price), 2)          AS max_price,
+        ROUND(AVG(log_return), 6)     AS avg_return,
+        ROUND(STDDEV(log_return), 6)  AS volatility
+    FROM processed_data
+    GROUP BY RegionName, StateName
+    ORDER BY avg_price DESC;
+    """,
+        ),
+    },
 }
 
 

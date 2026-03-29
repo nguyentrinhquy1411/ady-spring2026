@@ -220,6 +220,9 @@ and optionally scale features with `StandardScaler`.
 
 ```python
 # City target encoding — fit on train only to avoid leakage
+# NOTE: This uses the full train-set mean per city. A stricter approach would
+# use an expanding mean (only data up to month t-1), but the impact on
+# log-return (which oscillates near zero) is negligible.
 city_mean   = train_df.groupby("RegionID")["log_return"].mean()
 global_mean = train_df["log_return"].mean()
 
@@ -365,6 +368,71 @@ SELECT
 FROM housing
 WHERE log_return != 0;
 """, con))
+```
+
+### Query 6: Market Segmentation by Price Tier
+
+We use `CASE WHEN` to classify every observation into **High / Mid / Low** price tiers,
+then compare their average return and volatility. This reveals whether expensive and
+cheap markets behave differently.
+
+```python
+display(pd.read_sql_query("""
+SELECT
+    CASE
+        WHEN price > 500000 THEN 'High (>500K)'
+        WHEN price > 200000 THEN 'Mid (200K-500K)'
+        ELSE 'Low (<200K)'
+    END AS tier,
+    COUNT(*)                        AS observations,
+    COUNT(DISTINCT RegionName)      AS num_regions,
+    ROUND(AVG(price), 2)            AS avg_price,
+    ROUND(MEDIAN(price), 2)         AS median_price,
+    ROUND(AVG(log_return), 6)       AS avg_return,
+    ROUND(STDDEV(log_return), 6)    AS volatility
+FROM housing
+GROUP BY tier
+ORDER BY avg_price DESC;
+""", con))
+```
+
+### Query 7: Highest, Median, and Lowest Priced Regions
+
+Identify the single most expensive, the median-priced, and the cheapest region
+to understand the full spectrum of the U.S. housing market.
+
+```python
+# Rank all regions by average price
+region_prices = pd.read_sql_query("""
+SELECT
+    RegionName,
+    StateName,
+    ROUND(AVG(price), 2)          AS avg_price,
+    ROUND(MEDIAN(price), 2)       AS median_price,
+    ROUND(MIN(price), 2)          AS min_price,
+    ROUND(MAX(price), 2)          AS max_price,
+    ROUND(AVG(log_return), 6)     AS avg_return,
+    ROUND(STDDEV(log_return), 6)  AS volatility
+FROM housing
+GROUP BY RegionName, StateName
+ORDER BY avg_price DESC;
+""", con)
+
+n = len(region_prices)
+extremes = pd.concat([
+    region_prices.iloc[[0]].assign(label="🏆 Highest"),
+    region_prices.iloc[[n // 2]].assign(label="📊 Median"),
+    region_prices.iloc[[-1]].assign(label="📉 Lowest"),
+], ignore_index=True)
+
+# Reorder columns for clarity
+extremes = extremes[["label", "RegionName", "StateName", "avg_price", "median_price",
+                      "min_price", "max_price", "avg_return", "volatility"]]
+display(extremes)
+
+print(f"\nPrice spread: ${region_prices.iloc[0]['avg_price']:,.0f} (highest) vs "
+      f"${region_prices.iloc[-1]['avg_price']:,.0f} (lowest) = "
+      f"{region_prices.iloc[0]['avg_price'] / region_prices.iloc[-1]['avg_price']:.1f}x difference")
 
 con.close()
 ```
@@ -539,6 +607,11 @@ We compare 4 models, then convert log-return predictions back to dollar prices.
 ### 6.1 Prepare Data
 
 ```python
+# IMPORTANT: Sort by date so that TimeSeriesSplit splits chronologically,
+# not by RegionID blocks. Without this, CV folds would mix cities instead of time.
+train_df = train_df.sort_values("date").reset_index(drop=True)
+test_df  = test_df.sort_values("date").reset_index(drop=True)
+
 # Pre-calculate previous prices for inverse transform
 test_df["price_prev"] = test_df["price"] / np.exp(test_df["log_return"])
 price_true = test_df["price"]
@@ -548,7 +621,7 @@ y_train = train_df["log_return"].values
 X_test  = test_df[feature_cols].values
 y_test  = test_df["log_return"].values
 
-# Scale features (fit on train only)
+# Scale features (fit on train only) — needed for OLS and Ridge
 scaler = StandardScaler()
 X_train_sc = scaler.fit_transform(X_train)
 X_test_sc  = scaler.transform(X_test)
@@ -606,25 +679,27 @@ print(f"Ridge     →  MAE: ${ridge_metrics['MAE']:,.0f}  |  R²: {ridge_metrics
 ### 6.5 Model 4: LightGBM
 
 ```python
-# LightGBM uses a separate train/val split for early stopping
+# LightGBM uses a separate chronological train/val split for early stopping
 unique_dates = sorted(train_df["date"].unique())
 split_date   = unique_dates[int(len(unique_dates) * 0.85)]
 
 train_sub = train_df[train_df["date"] < split_date]
 val_sub   = train_df[train_df["date"] >= split_date]
 
-lgb_scaler = StandardScaler()
-X_tr_lgb  = lgb_scaler.fit_transform(train_sub[feature_cols])
-X_val_lgb = lgb_scaler.transform(val_sub[feature_cols])
-X_te_lgb  = lgb_scaler.transform(test_df[feature_cols])
+# NOTE: Tree-based models (LightGBM) are invariant to feature scaling —
+# they split on rank order, not magnitude. No StandardScaler needed here.
+X_tr_lgb  = train_sub[feature_cols].values
+X_val_lgb = val_sub[feature_cols].values
+X_te_lgb  = test_df[feature_cols].values
 
 lgb_model = lgb.LGBMRegressor(n_estimators=1000, learning_rate=0.05, random_state=42)
 lgb_model.fit(
-    X_tr_lgb, train_sub["log_return"],
-    eval_set=[(X_val_lgb, val_sub["log_return"])],
+    X_tr_lgb, train_sub["log_return"].values,
+    eval_set=[(X_val_lgb, val_sub["log_return"].values)],
     eval_metric="l2",
     callbacks=[lgb.early_stopping(50, verbose=False)]
 )
+print(f"LightGBM stopped at iteration {lgb_model.best_iteration_}")
 
 lgb_price = test_df["price_prev"] * np.exp(lgb_model.predict(X_te_lgb))
 lgb_metrics = {
