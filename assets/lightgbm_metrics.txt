@@ -1,2 +1,0 @@
-[LightGBM] log_return - MAE: 0.002166 | RMSE: 0.003001 | R2: 0.853533
-[LightGBM] Price Space - MAE: $543.87 | RMSE: $937.00 | R2: 0.999967
