@@ -1,5 +1,7 @@
 # ADY2026 — U.S. Housing Price Prediction 🏠
 
+![Housing Dashboard](dashboard.jpg)
+
 A full end-to-end Data Science & Machine Learning pipeline for predicting U.S. housing price changes using the **Zillow Home Value Index (ZHVI)** dataset.
 
 > **📓 The complete, self-contained walkthrough is in [`notebook/ADY2026_Full_Pipeline.ipynb`](notebook/ADY2026_Full_Pipeline.ipynb).**
@@ -26,6 +28,8 @@ A full end-to-end Data Science & Machine Learning pipeline for predicting U.S. h
 ADY2026/
 ├── README.md                          ← You are here
 ├── pyproject.toml                     ← Project dependencies
+├── AI_Usage_Audit.md                  ← AI integration & validation log
+├── dashboard.jpg                      ← Project dashbaord / hero image
 │
 ├── notebook/
 │   └── ADY2026_Full_Pipeline.ipynb    ← ⭐ Main deliverable (self-contained)
