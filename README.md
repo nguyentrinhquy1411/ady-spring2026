@@ -29,7 +29,7 @@ ADY2026/
 ├── README.md                          ← You are here
 ├── pyproject.toml                     ← Project dependencies
 ├── AI_Usage_Audit.md                  ← AI integration & validation log
-├── dashboard.jpg                      ← Project dashbaord / hero image
+├── dashboard.jpg                      ← Project dashboard / hero image
 │
 ├── notebook/
 │   └── ADY2026_Full_Pipeline.ipynb    ← ⭐ Main deliverable (self-contained)
