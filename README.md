@@ -11,12 +11,12 @@ A full end-to-end Data Science & Machine Learning pipeline for predicting U.S. h
 
 | # | Criterion | Notebook Section | Supporting Files |
 |---|---|---|---|
-| 1 | Problem Understanding | §1 Problem Understanding | `README.md` |
-| 2 | Data Understanding & Preprocessing | §2 Data Understanding & Preprocessing | `src/preprocess/preprocess.py` |
-| 3 | SQL Analysis | §3 SQL Analysis | `sql/run_queries.py`, `sql/*.sql` |
+| 1 | Problem Understanding | §1 Problem Understanding | `README.md`, `papers/spatiotemporal_housing_price_prediction.pdf` |
+| 2 | Data Understanding & Preprocessing | §2 Data Understanding & Preprocessing | `src/preprocess/preprocess.py`, `papers/preprocess_data_pipeline.pdf` |
+| 3 | SQL Analysis | §3 SQL Analysis | `sql/run_queries.py`, `sql/*.sql`, `papers/sql_analysis.pdf` |
 | 4 | Python Analysis | §4 Python Analysis | `src/analysis/evaluate_models.py` |
-| 5 | Visualization | §5 Visualization | `src/visualization/`, `visualizations/` |
-| 6 | Regression Analysis | §6 Regression Analysis | `src/analysis/evaluate_models.py` |
+| 5 | Visualization | §5 Visualization | `src/visualization/`, `visualizations/`, `papers/model_evaluation_report.pdf` |
+| 6 | Regression Analysis | §6 Regression Analysis | `src/analysis/evaluate_models.py`, `papers/model_evaluation_report.pdf` |
 
 ---
 
@@ -41,6 +41,13 @@ ADY2026/
 │       ├── train_price.csv            ← Train set (raw price target)
 │       ├── test_price.csv
 │       └── processed_data_price.csv   ← Combined price data (for SQL)
+│
+├── papers/                            ← Academic reports & LaTeX source
+│   ├── model_evaluation_report.pdf    ← Comprehensive EDA & Model Evaluation
+│   ├── sql_analysis.pdf               ← SQL Query Results & Insights
+│   ├── spatiotemporal_housing_price_prediction.pdf ← Main Research Paper
+│   ├── preprocess_data_pipeline.pdf   ← Data Pipeline Documentation
+│   └── *.tex / *.log / *.aux          ← LaTeX source files
 │
 ├── src/
 │   ├── preprocess/
