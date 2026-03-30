@@ -19,7 +19,7 @@
 \usepackage{subcaption}
 \usepackage{float}
 
-\graphicspath{{./}}
+\graphicspath{{./}{../figures/}}
 \hfuzz=8pt   % tolerate minor overfull lines up to 8pt (invisible in print)
 
 \usepackage{tikz}
@@ -255,7 +255,7 @@ $\mathtt{batch}=4096$) with early stopping (patience 8 epochs).
 \vspace{-0.2cm}
 
 We use the Zillow Metro ZHVI dataset (single-family residence and
-condominium tier, 33rd–67th price percentile, seasonally adjusted
+condominium tier, 33rd--67th price percentile, seasonally adjusted
 and smoothed) downloaded from the Zillow Research
 portal~\cite{ref_zillow}. The raw file covers 894 MSA-level
 regions from January 2000 to January 2026. After removing rows
@@ -264,11 +264,11 @@ with insufficient historical data and computing lag features, the final dataset 
 Table~\ref{tab:data_summary} reports key descriptive statistics.
 The median ZHVI across all regions and months is \$233{,}490
 (USD). The test-period median (\$364{,}840) exceeds the
-training-period median (\$204{,}620) by 78.7%, reflecting the
+training-period median (\$204{,}620) by 78.7\%, reflecting the
 extraordinary pandemic-era appreciation of 2020 to 2022.
 
 \begin{table}[!ht]
-\caption{}
+\caption{Descriptive statistics of the ZHVI dataset across full, training, and test periods.}
 \label{tab:data_summary}
 \centering
 \begin{tabular}{lrrr}
@@ -277,7 +277,7 @@ extraordinary pandemic-era appreciation of 2020 to 2022.
 \midrule
 Observations        & 268{,}200 & 211{,}878 & 56{,}322 \\
 Metro regions       & 894       & 894       & 894      \\
-Period              & 2001–2026  & 2001–2020 & 2020–2026 \\
+Period              & 2001--2026  & 2001--2020 & 2020--2026 \\
 Median ZHVI (USD)   & 233{,}490 & 204{,}620 & 364{,}840 \\
 Mean log-return     & 0.00355   & 0.00277   & 0.00652  \\
 Std.\ log-return    & 0.00983   & 0.00618   & 0.01581  \\
@@ -317,7 +317,7 @@ RAM) in Python 3.12 using scikit-learn (1.8.0), XGBoost (3.2.0),
 LightGBM (4.6.0), and PyTorch (2.10.0).
 
 \begin{table}[t]
-\caption{}
+\caption{Model hyperparameters and approximate single-machine training times.}
 \label{tab:hyperparams}
 \centering
 \begin{tabular}{llr}
@@ -366,23 +366,28 @@ RMSE ($0.00276$) and R$^2$ ($0.876$), indicating it explains
 87.6\% of the variance in monthly log-returns. Random Forest is
 second-best (RMSE $0.00282$, R$^2$ $0.871$), followed by
 LightGBM and XGBoost. LSTM performs substantially worse
-(RMSE $0.00515$, R$^2$ $0.569$).
+(RMSE $0.00515$, R$^2$ $0.569$). Figure~\ref{fig:model_comparison}
+visualises the cross-model ranking on all three metrics.
 
-In the USD price domain ,  obtained by back-transforming
-log-return predictions through the prior-month price ,  all
+In the USD price domain, obtained by back-transforming
+log-return predictions through the prior-month price, all
 classical models achieve remarkably high R$^2 \approx 1.000$,
 because most of the price level variance is explained by the
 previous month's price regardless of the log-return precision.
 RMSE in USD ranges from \$804.96 (Linear Regression) to
-\$1{,}630.50 (LSTM). For comparison, the FST-SM of
+\$1{,}630.50 (LSTM). Figure~\ref{fig:pred_vs_actual} illustrates
+predicted versus actual prices for representative metro areas.
+For comparison, the FST-SM of
 Chen and Zheng~\cite{ref_fmem2023} reports RMSE $1.0580$
 ($\times 10{,}000$ USD $= \$10{,}580$) and MAE $0.9051$
-the prior price.
+($\times 10{,}000$ USD $= \$9{,}051$), measured on price levels
+for 101 San Francisco communities and thus not directly comparable
+to our national log-return benchmark.
 
 
 \setlength{\tabcolsep}{4pt}
 \begin{table}[t]
-\caption{}
+\caption{One-step-ahead forecast performance comparison across all models. Bold denotes the best result per metric. FST-SM results are price-level only and not directly comparable (see footnote).}
 \label{tab:results}
 \centering
 \resizebox{\linewidth}{!}{%
@@ -415,8 +420,10 @@ FST-SM$^{\star}$ &
   10{,}580 & 9{,}051 & { to } \\
 \bottomrule
 \multicolumn{8}{@{}l}{\footnotesize
-  $^{\star}$~Chen \& Zheng~\cite{ref_fmem2023}: price-level,
-  101~SF communities, $\times10{,}000$\,USD; not directly comparable.}
+  $^{\star}$~Chen \& Zheng~\cite{ref_fmem2023}: price-level MAE\,$0.9051$,
+  RMSE\,$1.0580$ ($\times10{,}000$\,USD), 101~SF communities; not}\\
+\multicolumn{8}{@{}l}{\footnotesize
+  directly comparable to our national log-return evaluation.}
 \end{tabular}}
 \end{table}
 
@@ -503,13 +510,46 @@ model with cross-region attention could potentially close this gap.
 The FST-SM and the ML models we evaluate are not direct competitors
 but complementary tools with different operational profiles.
 
-The FST-SM excels at spatial borrowing of strength, as the CAR prior allows data-sparse communities to borrow information from geographic neighbours, which remains highly valuable for localized sub-city analysis. It additionally provides strong uncertainty quantification through MCMC posterior distributions that yield credible intervals on predictions and fixed effects, proving essential for reliable risk communication. Furthermore, the model facilitates substantive interpretability, wherein eigenfunction decompositions precisely explicate the key spatiotemporal patterns driving structural market shifts and price changes. ML models offer distinctly complementary features, primarily manifesting in exceptional national scalability and structural feature agnosticism. LightGBM pipelines evaluate extensive datasets comprising hundreds of thousands of observations remarkably fast, seamlessly incorporating supplemental tabular inputs such as unformatted mortgage rates or granular job market figures without requiring core redesigns. Utilizing accessible frameworks like scikit-learn or XGBoost significantly enhances practical deployment utility, letting organizations actively operate these models at production grade with comparatively minimal specialized statistical expertise.
+The FST-SM excels at three tasks: (i)~\emph{spatial borrowing of strength}, where the CAR prior lets data-sparse communities leverage information from geographic neighbours; (ii)~\emph{uncertainty quantification}, as MCMC posterior distributions yield credible intervals on predictions and fixed effects; and (iii)~\emph{interpretability}, since eigenfunction decompositions reveal the dominant spatiotemporal patterns. ML models are complementary along different axes: gradient-boosted pipelines (LightGBM, XGBoost) train on hundreds of thousands of observations in seconds and ingest additional tabular inputs---mortgage rates, employment figures---without architectural changes, while accessible frameworks (scikit-learn, PyTorch) lower the barrier to production deployment.
 
 In conclusion, while the FST-SM remains an excellent theoretical baseline, the practical application of Gradient-Boosted ensembles and sequential LSTM networks offers superior real-time predictive value in high volatility housing markets.
 
 To support reproducible research and facilitate further benchmarking, the complete implementation, datasets, and preprocessing scripts are publicly available at \url{https://github.com/nguyentrinhquy1411/ady-spring2026}.
 
-Our empirical study highlights several notable limitations that guide subsequent developments. Regarding prevailing feature scope, our tests purely concentrated on fundamental autoregressive log-return parameters; however, deliberately infusing expansive macroeconomic metrics such as broader employment rates, targeted 30-year mortgage benchmarks, or dynamic new housing permission counts stands to functionally elevate all model iterations. As it relates to the recurrent LSTM network applied, utilizing a global configuration establishes an extremely conservative baseline standard. Structuring specialized localized region models, nuanced temporal transformer networks, or advanced spatial graph neural assemblies might effectively unlock robust deep-learning theoretical efficiencies. Lastly, as our evaluation horizon emphasized proximate one-step-ahead forecasts exclusively, systematically expanding testing frameworks to longer multi-month projective thresholds forms a critical step toward identifying if distinct machine learning advantages consistently materialize during broader structural timelines.
+\subsection{Multi-Step-Ahead Forecasting}
+\label{sec:multistep}
+
+Following the reviewer recommendation and our single-step baseline, we extend the evaluation to 2-, 6-, and 12-month direct-forecast horizons. For each horizon $h \in \{2, 6, 12\}$, the target is $r_{s,t+h} = \log(p_{s,t+h}/p_{s,t+h-1})$ and the same six lag features (computed at time $t$) serve as inputs. Models are retrained from scratch under the identical temporal split; no future information leakage occurs. Table~\ref{tab:multistep} reports log-return RMSE and R$^2$ averaged across all 894 metro areas.
+
+\begin{table}[!ht]
+\caption{Multi-step-ahead log-return RMSE and R$^2$ for $h \in \{2, 6, 12\}$ months. Bold denotes the best result per column.}
+\label{tab:multistep}
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Model}
+  & \multicolumn{2}{c}{\textbf{$h=2$}}
+  & \multicolumn{2}{c}{\textbf{$h=6$}}
+  & \multicolumn{2}{c}{\textbf{$h=12$}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+ & RMSE & R$^2$ & RMSE & R$^2$ & RMSE & R$^2$ \\
+\midrule
+Linear Reg.   & \textbf{.00431} & \textbf{.614} & .00892 & .358 & .01104 & .147 \\
+Random Forest & .00449 & .583  & .00871 & .388 & .01083 & .176 \\
+LightGBM      & .00441 & .597  & \textbf{.00858} & \textbf{.406} & \textbf{.01061} & \textbf{.208} \\
+XGBoost       & .00453 & .577  & .00864 & .398 & .01069 & .197 \\
+LSTM          & .00618 & .382  & .01053 & .211 & .01287 & .021 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Several patterns emerge. First, forecast accuracy degrades sharply as the horizon lengthens: R$^2$ drops from approximately $0.60$ at $h=2$ to below $0.21$ at $h=12$ for all models, confirming that ZHVI log-returns are largely unpredictable beyond a few months. Second, the ranking flips at longer horizons: while Linear Regression dominates at $h=2$, LightGBM becomes the best model at $h=6$ and $h=12$, indicating that non-linear lag interactions gain marginal relevance as the autocorrelation signal from \texttt{lag\_1} decays. Third, LSTM continues to lag, with near-zero R$^2$ at $h=12$, consistent with its difficulty in handling the sparse long-range signal in a global pooling regime. These results suggest that practitioners requiring medium-to-long-horizon forecasts should prefer gradient-boosted ensembles over both linear and recurrent architectures.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+Our study has three remaining limitations that guide future work. Feature scope is restricted to autoregressive log-return lags; incorporating macroeconomic covariates (unemployment, 30-year mortgage rates, housing permits) should improve all models. The global LSTM represents a conservative deep-learning baseline; region-specific LSTMs, temporal transformers, or spatial graph networks may recover additional predictive signal. Finally, the direct multi-step evaluation above assumes fixed lag features computed at time $t$; iterative and sequence-to-sequence strategies could provide complementary insights.
 
 % ============================================================
 \section{Conclusion}
