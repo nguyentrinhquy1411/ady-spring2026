@@ -7,9 +7,9 @@ A comprehensive data analysis project that explores and visualizes housing price
 This project analyzes Vietnamese housing market data to uncover pricing patterns, relationships between property features, and market insights through exploratory data analysis and visualizations.
 
 ### Features
-- 📊 Data collection and loading from CSV
+- 📊 Data collection and loading vsvsvsfrom CSV
 - 🧹 Data cleaning and normalization
-- 📈 Exploratory Data Analysis (EDA)
+- 📈 Exploratory Data Analysis (EDA)ádasdasdas
 - 📉 Comprehensive visualizations with Matplotlib, Seaborn, and Plotly
 - 🔍 Correlation analysis and statistical insights
 
