@@ -149,6 +149,19 @@ SECTIONS = {
     LIMIT 10;
 """,
         ),
+        "price_trend_3_cities": (
+            "Xu hướng giá nhà theo năm tại 3 thị trường đại diện (cao / trung / thấp)",
+            """
+    SELECT
+        RegionName,
+        YEAR(date)               AS year,
+        ROUND(AVG(price), 2)     AS avg_price
+    FROM processed_data
+    WHERE RegionName IN ('San Jose, CA', 'Greensboro, NC', 'Clarksdale, MS')
+    GROUP BY RegionName, YEAR(date)
+    ORDER BY RegionName, year;
+""",
+        ),
     },
 
     # ── #4 SQL Analysis — log_return distribution ─────────────────────────────
